@@ -3,8 +3,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using MsBox.Avalonia;
-using MsBox.Avalonia.Enums;
+using PasswordSecure.Presentation.Controls.MessageBoxControl;
 
 namespace PasswordSecure.Presentation.Views;
 
@@ -16,7 +15,7 @@ public partial class EditPasswordWindow : Window
 
 		_isPasswordAccepted = false;
 
-		AddHandler(KeyUpEvent, OnKeyPressed, RoutingStrategies.Tunnel);
+		AddHandler(KeyDownEvent, OnKeyPressing, RoutingStrategies.Tunnel);
 	}
 
 	public int MinimumPasswordLength { get; set; }
@@ -40,7 +39,7 @@ public partial class EditPasswordWindow : Window
 		}
 	}
 
-	private async void OnKeyPressed(object? sender, KeyEventArgs e)
+	private async void OnKeyPressing(object? sender, KeyEventArgs e)
 	{
 		if (e.Key == Key.Enter)
 		{
@@ -117,16 +116,11 @@ public partial class EditPasswordWindow : Window
 
 	private async Task DisplayPasswordTooShortErrorMessage()
 	{
-		var passwordTooShortErrorMessageBox =
-			MessageBoxManager.GetMessageBoxStandard(
-				"Password Too Short Error",
-				$"The password is too short.{Environment.NewLine}Minimum password length is {MinimumPasswordLength} characters.",
-				ButtonEnum.Ok,
-				MsBox.Avalonia.Enums.Icon.Error,
-				null,
-				WindowStartupLocation.CenterOwner);
-
-		await passwordTooShortErrorMessageBox.ShowWindowDialogAsync(this);
+		await MessageBoxManager.ShowDialogAsync(
+			"Password Too Short Error",
+			$"The password is too short.{Environment.NewLine}{Environment.NewLine}Minimum password length is {MinimumPasswordLength} characters.",
+			MessageBoxType.Error,
+			this);
 	}
 
 	private bool IsPasswordMismatch
@@ -158,15 +152,10 @@ public partial class EditPasswordWindow : Window
 
 	private async Task DisplayPasswordMismatchErrorMessage()
 	{
-		var passwordMismatchErrorMessageBox =
-			MessageBoxManager.GetMessageBoxStandard(
-				"Password Mismatch Error",
-				"The password and the confirmed password do not match.",
-				ButtonEnum.Ok,
-				MsBox.Avalonia.Enums.Icon.Error,
-				null,
-				WindowStartupLocation.CenterOwner);
-
-		await passwordMismatchErrorMessageBox.ShowWindowDialogAsync(this);
+		await MessageBoxManager.ShowDialogAsync(
+			"Password Mismatch Error",
+			"The password and the confirmed password do not match.",
+			MessageBoxType.Error,
+			this);
 	}
 }

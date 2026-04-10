@@ -12,7 +12,7 @@ public partial class InputMasterPasswordWindow : Window
 
 		_isPasswordAccepted = false;
 
-		AddHandler(KeyUpEvent, OnKeyPressed, RoutingStrategies.Tunnel);
+		AddHandler(KeyDownEvent, OnKeyPressing, RoutingStrategies.Tunnel);
 	}
 
 	private bool _isPasswordAccepted;
@@ -28,7 +28,7 @@ public partial class InputMasterPasswordWindow : Window
 		}
 	}
 
-	private void OnKeyPressed(object? sender, KeyEventArgs e)
+	private void OnKeyPressing(object? sender, KeyEventArgs e)
 	{
 		if (e.Key == Key.Enter)
 		{

@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Controls;
 using Avalonia.Platform.Storage;
-using MsBox.Avalonia;
-using MsBox.Avalonia.Enums;
 using PasswordSecure.Application.Providers;
 using PasswordSecure.Application.Services;
 using PasswordSecure.DomainModel;
 using PasswordSecure.DomainModel.CustomEventArgs;
+using PasswordSecure.Presentation.Controls.MessageBoxControl;
 using PasswordSecure.Presentation.ViewModels;
 using PasswordSecure.Presentation.Views;
 
@@ -70,7 +68,8 @@ public class MainPresenter
 		object? sender, AccountEntryCollectionEventArgs e)
 	{
 		var shouldExitWithoutProcessing =
-			await SuggestSaveChanges(e, ButtonEnum.YesNoCancel);
+			await SuggestSaveChanges(e, MessageBoxType.WarningYesNoCancel);
+
 		if (shouldExitWithoutProcessing)
 		{
 			return;
@@ -98,7 +97,8 @@ public class MainPresenter
 		object? sender, AccountEntryCollectionEventArgs e)
 	{
 		var shouldExitWithoutProcessing = await SuggestSaveChanges(
-			e, ButtonEnum.YesNoCancel);
+			e, MessageBoxType.WarningYesNoCancel);
+
 		if (shouldExitWithoutProcessing)
 		{
 			return;
@@ -139,7 +139,8 @@ public class MainPresenter
 		object? sender, AccountEntryCollectionEventArgs e)
 	{
 		var shouldExitWithoutProcessing =
-			await SuggestSaveChanges(e, ButtonEnum.YesNoCancel);
+			await SuggestSaveChanges(e, MessageBoxType.WarningYesNoCancel);
+
 		if (shouldExitWithoutProcessing)
 		{
 			return;
@@ -154,7 +155,8 @@ public class MainPresenter
 		object? sender, AccountEntryCollectionEventArgs e)
 	{
 		var shouldExitWithoutProcessing = await SuggestSaveChanges(
-			e, ButtonEnum.YesNoCancel);
+			e, MessageBoxType.WarningYesNoCancel);
+
 		if (shouldExitWithoutProcessing)
 		{
 			return;
@@ -166,7 +168,7 @@ public class MainPresenter
 	private async void OnWindowClosing(
 		object? sender, AccountEntryCollectionEventArgs e)
 	{
-		await SuggestSaveChanges(e, ButtonEnum.YesNo);
+		await SuggestSaveChanges(e, MessageBoxType.WarningYesNo);
 
 		await _mainWindow.CloseWindow();
 	}
@@ -175,19 +177,20 @@ public class MainPresenter
 		=> await DisplayHelpMessage();
 
 	private async Task<bool> SuggestSaveChanges(
-		AccountEntryCollectionEventArgs e, ButtonEnum buttonEnum)
+		AccountEntryCollectionEventArgs e, MessageBoxType messageBoxType)
 	{
 		var shouldExitWithoutProcessing = false;
 
 		if (e.HasChanged)
 		{
-			var buttonResult = await DisplayUnsavedChangesMessage(buttonEnum);
+			var buttonResult = await DisplayUnsavedChangesMessage(
+				messageBoxType);
 
-			if (buttonResult is ButtonResult.Yes)
+			if (buttonResult == MessageBoxResult.Yes)
 			{
 				await SaveEncryptedContainer(e.AccountEntryCollection);
 			}
-			else if (buttonResult is ButtonResult.Cancel)
+			else if (buttonResult == MessageBoxResult.Cancel)
 			{
 				shouldExitWithoutProcessing = true;
 			}
@@ -303,43 +306,33 @@ public class MainPresenter
 
 	private async Task DisplayErrorMessage(Exception ex)
 	{
-		var errorMessageBox = MessageBoxManager.GetMessageBoxStandard(
+		await MessageBoxManager.ShowDialogAsync(
 			"Error",
 			ex.Message,
-			ButtonEnum.Ok,
-			Icon.Error,
-			null,
-			WindowStartupLocation.CenterOwner);
-
-		await errorMessageBox.ShowWindowDialogAsync(_mainWindow);
+			MessageBoxType.Error,
+			_mainWindow);
 	}
 
 	private async Task DisplayHelpMessage()
 	{
-		var helpMessageBox = MessageBoxManager.GetMessageBoxStandard(
+		await MessageBoxManager.ShowDialogAsync(
 			"About Password Secure",
 			_assemblyVersionProvider.AssemblyVersionString,
-			ButtonEnum.Ok,
-			Icon.Info,
-			null,
-			WindowStartupLocation.CenterOwner);
-
-		await helpMessageBox.ShowWindowDialogAsync(_mainWindow);
+			MessageBoxType.Info,
+			_mainWindow);
 	}
 
-	private async Task<ButtonResult> DisplayUnsavedChangesMessage(
-		ButtonEnum buttonEnum)
+	private async Task<MessageBoxResult> DisplayUnsavedChangesMessage(
+		MessageBoxType messageBoxType)
 	{
-		var unsavedChangesMessageBox = MessageBoxManager.GetMessageBoxStandard(
-			"Unsaved Changes",
-			"There are unsaved changes. Would you like to save them?",
-			buttonEnum,
-			Icon.Question,
-			null,
-			WindowStartupLocation.CenterOwner);
+		var unsavedChangesMessageBoxResult =
+			await MessageBoxManager.ShowDialogAsync(
+				"Unsaved Changes",
+				"There are unsaved changes. Would you like to save them?",
+				messageBoxType,
+				_mainWindow);
 
-		return await unsavedChangesMessageBox.ShowWindowDialogAsync(
-			_mainWindow);
+		return unsavedChangesMessageBoxResult;
 	}
 
 	private void ResetData()
