@@ -3,223 +3,227 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Security;
 using System.Windows.Input;
+
 using Avalonia.Input.Platform;
+
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+
 using PasswordSecure.DomainModel;
+using PasswordSecure.Infrastructure;
 using PasswordSecure.Presentation.Views;
 
 namespace PasswordSecure.Presentation.ViewModels;
 
 public class AccountEntryCollectionViewModel : ObservableObject
 {
-	public AccountEntryCollectionViewModel(
-		MainWindow mainWindow, AccountEntryCollection accountEntries)
-	{
-		_mainWindow = mainWindow;
+    public AccountEntryCollectionViewModel(
+        MainWindow mainWindow, AccountEntryCollection accountEntries)
+    {
+        _mainWindow = mainWindow;
 
-		AccountEntryViewModels = FromAccountEntryCollection(accountEntries);
+        AccountEntryViewModels = FromAccountEntryCollection(accountEntries);
 
-		RegisterEventHandlers();
+        RegisterEventHandlers();
 
-		AddAccountEntryCommand = GetAddAccountEntryCommand();
-		DeleteAccountEntryCommand = GetDeleteAccountEntryCommand();
-		SortAccountEntriesCommand = GetSortAccountEntriesCommand();
+        AddAccountEntryCommand = GetAddAccountEntryCommand();
+        DeleteAccountEntryCommand = GetDeleteAccountEntryCommand();
+        SortAccountEntriesCommand = GetSortAccountEntriesCommand();
 
-		EditPasswordCommand = GetEditPasswordCommand();
-		CopyPasswordCommand = GetCopyPasswordCommand();
-	}
+        EditPasswordCommand = GetEditPasswordCommand();
+        CopyPasswordCommand = GetCopyPasswordCommand();
+    }
 
-	public ObservableCollection<AccountEntryViewModel> AccountEntryViewModels
-		{ get; set; }
+    public ObservableCollection<AccountEntryViewModel> AccountEntryViewModels
+    { get; set; }
 
-	public bool HasChanged { get; set; }
+    public bool HasChanged { get; set; }
 
-	public AccountEntryViewModel? SelectedAccountEntryViewModel
-	{
-		get => _selectedAccountEntryViewModel;
-		set
-		{
-			SetProperty(ref _selectedAccountEntryViewModel, value);
+    public AccountEntryViewModel? SelectedAccountEntryViewModel
+    {
+        get => _selectedAccountEntryViewModel;
+        set
+        {
+            SetProperty(ref _selectedAccountEntryViewModel, value);
 
-			SelectedAccountEntryViewModelChanged?.Invoke(this, EventArgs.Empty);
-		}
-	}
+            SelectedAccountEntryViewModelChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
 
-	public event EventHandler? SelectedAccountEntryViewModelChanged;
-	public event EventHandler? PasswordChanged;
+    public event EventHandler? SelectedAccountEntryViewModelChanged;
+    public event EventHandler? PasswordChanged;
 
-	public ICommand AddAccountEntryCommand { get; }
-	public ICommand DeleteAccountEntryCommand { get; }
-	public ICommand SortAccountEntriesCommand { get; }
+    public ICommand AddAccountEntryCommand { get; }
+    public ICommand DeleteAccountEntryCommand { get; }
+    public ICommand SortAccountEntriesCommand { get; }
 
-	public ICommand EditPasswordCommand { get; }
-	public ICommand CopyPasswordCommand { get; }
+    public ICommand EditPasswordCommand { get; }
+    public ICommand CopyPasswordCommand { get; }
 
-	public AccountEntryCollection ToAccountEntryCollection()
-	{
-		var accountEntries = AccountEntryViewModels
-			.Select(anAccountEntryViewModel
-						=> anAccountEntryViewModel.AccountEntry)
-			.OrderBy(anAccountEntry => anAccountEntry.Name)
-			.ToList();
+    public AccountEntryCollection ToAccountEntryCollection()
+    {
+        var accountEntries = AccountEntryViewModels
+            .Select(anAccountEntryViewModel
+                        => anAccountEntryViewModel.AccountEntry)
+            .OrderBy(anAccountEntry => anAccountEntry.Name)
+            .ToList();
 
-		var accountEntryCollection = new AccountEntryCollection(accountEntries);
-		return accountEntryCollection;
-	}
+        var accountEntryCollection = new AccountEntryCollection(accountEntries);
+        return accountEntryCollection;
+    }
 
-	public void FocusOnFirstAccountEntryIfAvailable()
-	{
-		var firstAccountEntryViewModel =
-			AccountEntryViewModels.FirstOrDefault();
+    public void FocusOnFirstAccountEntryIfAvailable()
+    {
+        AccountEntryViewModel? firstAccountEntryViewModel =
+            AccountEntryViewModels.FirstOrDefault();
 
-		if (firstAccountEntryViewModel is not null)
-		{
-			SelectedAccountEntryViewModel = firstAccountEntryViewModel;
-		}
-	}
+        if (firstAccountEntryViewModel is not null)
+        {
+            SelectedAccountEntryViewModel = firstAccountEntryViewModel;
+        }
+    }
 
-	private void RegisterEventHandlers()
-	{
-		AccountEntryViewModels.CollectionChanged += OnCollectionChanged;
+    private void RegisterEventHandlers()
+    {
+        AccountEntryViewModels.CollectionChanged += OnCollectionChanged;
 
-		foreach (var anAccountEntryViewModel in AccountEntryViewModels)
-		{
-			anAccountEntryViewModel.PropertyChanged +=
-				OnAccountEntryPropertyChanged;
-		}
-	}
+        foreach (AccountEntryViewModel anAccountEntryViewModel in AccountEntryViewModels)
+        {
+            anAccountEntryViewModel.PropertyChanged +=
+                OnAccountEntryPropertyChanged;
+        }
+    }
 
-	public void UnregisterEventHandlers()
-	{
-		AccountEntryViewModels.CollectionChanged -= OnCollectionChanged;
+    public void UnregisterEventHandlers()
+    {
+        AccountEntryViewModels.CollectionChanged -= OnCollectionChanged;
 
-		foreach (var anAccountEntryViewModel in AccountEntryViewModels)
-		{
-			anAccountEntryViewModel.PropertyChanged -=
-				OnAccountEntryPropertyChanged;
-		}
-	}
+        foreach (AccountEntryViewModel anAccountEntryViewModel in AccountEntryViewModels)
+        {
+            anAccountEntryViewModel.PropertyChanged -=
+                OnAccountEntryPropertyChanged;
+        }
+    }
 
-	private readonly MainWindow _mainWindow;
+    private readonly MainWindow _mainWindow;
 
-	private AccountEntryViewModel? _selectedAccountEntryViewModel;
+    private AccountEntryViewModel? _selectedAccountEntryViewModel;
 
-	private static ObservableCollection<AccountEntryViewModel>
-		FromAccountEntryCollection(AccountEntryCollection accountEntries)
-	{
-		var accountEntryViewModelsAsList = accountEntries
-			.Select(anAccountEntry => new AccountEntryViewModel(anAccountEntry))
-			.ToList();
+    private static ObservableCollection<AccountEntryViewModel>
+        FromAccountEntryCollection(AccountEntryCollection accountEntries)
+    {
+        var accountEntryViewModelsAsList = accountEntries
+            .Select(anAccountEntry => new AccountEntryViewModel(anAccountEntry))
+            .ToList();
 
-		var accountEntryViewModels =
-			new ObservableCollection<AccountEntryViewModel>(
-				accountEntryViewModelsAsList);
+        var accountEntryViewModels =
+            new ObservableCollection<AccountEntryViewModel>(
+                accountEntryViewModelsAsList);
 
-		return accountEntryViewModels;
-	}
+        return accountEntryViewModels;
+    }
 
-	private ICommand GetAddAccountEntryCommand()
-		=> new RelayCommand(
-			() =>
-			{
-				var newAccountEntry = new AccountEntry();
-				var newAccountEntryViewModel = new AccountEntryViewModel(
-					newAccountEntry);
+    private RelayCommand GetAddAccountEntryCommand()
+        => new(
+            () =>
+            {
+                var newAccountEntry = new AccountEntry();
+                var newAccountEntryViewModel = new AccountEntryViewModel(
+                    newAccountEntry);
 
-				AccountEntryViewModels.Add(newAccountEntryViewModel);
-				newAccountEntryViewModel.PropertyChanged +=
-					OnAccountEntryPropertyChanged;
+                AccountEntryViewModels.Add(newAccountEntryViewModel);
+                newAccountEntryViewModel.PropertyChanged +=
+                    OnAccountEntryPropertyChanged;
 
-				SelectedAccountEntryViewModel = newAccountEntryViewModel;
-			});
+                SelectedAccountEntryViewModel = newAccountEntryViewModel;
+            });
 
-	private ICommand GetDeleteAccountEntryCommand()
-		=> new RelayCommand(
-			() =>
-			{
-				var selectedAccountEntryViewModel =
-					SelectedAccountEntryViewModel;
+    private RelayCommand GetDeleteAccountEntryCommand()
+        => new(
+            () =>
+            {
+                AccountEntryViewModel? selectedAccountEntryViewModel =
+                    SelectedAccountEntryViewModel;
 
-				if (selectedAccountEntryViewModel is not null)
-				{
-					selectedAccountEntryViewModel.PropertyChanged -=
-						OnAccountEntryPropertyChanged;
-					AccountEntryViewModels.Remove(
-						selectedAccountEntryViewModel);
-				}
-			});
+                if (selectedAccountEntryViewModel is not null)
+                {
+                    selectedAccountEntryViewModel.PropertyChanged -=
+                        OnAccountEntryPropertyChanged;
+                    AccountEntryViewModels.Remove(
+                        selectedAccountEntryViewModel);
+                }
+            });
 
-	private ICommand GetSortAccountEntriesCommand()
-		=> new RelayCommand(SortAccountEntryViewModels);
+    private RelayCommand GetSortAccountEntriesCommand()
+        => new(SortAccountEntryViewModels);
 
-	private ICommand GetEditPasswordCommand()
-		=> new RelayCommand(
-			async() =>
-			{
-				var selectedAccountEntryViewModel =
-					SelectedAccountEntryViewModel;
+    private RelayCommand GetEditPasswordCommand()
+        => new(
+            async () =>
+            {
+                AccountEntryViewModel? selectedAccountEntryViewModel =
+                    SelectedAccountEntryViewModel;
 
-				if (selectedAccountEntryViewModel is not null)
-				{
-					var editPasswordWindow = new EditPasswordWindow
-					{
-						DataContext = selectedAccountEntryViewModel
-					};
-					editPasswordWindow.TextBoxConfirmPassword.Text =
-						selectedAccountEntryViewModel.Password;
+                if (selectedAccountEntryViewModel is not null)
+                {
+                    var editPasswordWindow = new EditPasswordWindow
+                    {
+                        DataContext = selectedAccountEntryViewModel
+                    };
+                    editPasswordWindow.TextBoxConfirmPassword.Password =
+                        selectedAccountEntryViewModel.Password;
 
-					await editPasswordWindow.ShowDialog(_mainWindow);
+                    await editPasswordWindow.ShowDialog(_mainWindow);
 
-					PasswordChanged?.Invoke(this, EventArgs.Empty);
-				}
-			});
+                    PasswordChanged?.Invoke(this, EventArgs.Empty);
+                }
+            });
 
-	private ICommand GetCopyPasswordCommand()
-		=> new RelayCommand(
-			async() =>
-			{
-				var selectedAccountEntryViewModel =
-					SelectedAccountEntryViewModel;
+    private RelayCommand GetCopyPasswordCommand()
+        => new(
+            async () =>
+            {
+                AccountEntryViewModel? selectedAccountEntryViewModel =
+                    SelectedAccountEntryViewModel;
 
-				if (selectedAccountEntryViewModel is not null)
-				{
-					var password = selectedAccountEntryViewModel.Password;
-					await _mainWindow.Clipboard!.SetTextAsync(password);
-				}
-			});
+                if (selectedAccountEntryViewModel?.Password is SecureString secure)
+                {
+                    await _mainWindow.Clipboard!.SetTextAsync(secure.ToPasswordString());
+                }
+            });
 
-	private void SortAccountEntryViewModels()
-	{
-		UnregisterEventHandlers();
+    private void SortAccountEntryViewModels()
+    {
+        UnregisterEventHandlers();
 
-		var selectedAccountEntryViewModel = SelectedAccountEntryViewModel;
+        AccountEntryViewModel? selectedAccountEntryViewModel = SelectedAccountEntryViewModel;
 
-		var sortedAccountEntryViewModels = AccountEntryViewModels
-			.OrderBy(anAccountEntryViewModel => anAccountEntryViewModel.Name)
-			.ToList();
+        var sortedAccountEntryViewModels = AccountEntryViewModels
+            .OrderBy(anAccountEntryViewModel => anAccountEntryViewModel.Name)
+            .ToList();
 
-		foreach (var anAccountEntryViewModel in sortedAccountEntryViewModels)
-		{
-			AccountEntryViewModels.Remove(anAccountEntryViewModel);
-		}
+        foreach (AccountEntryViewModel? anAccountEntryViewModel in sortedAccountEntryViewModels)
+        {
+            AccountEntryViewModels.Remove(anAccountEntryViewModel);
+        }
 
-		foreach (var anAccountEntryViewModel in sortedAccountEntryViewModels)
-		{
-			AccountEntryViewModels.Add(anAccountEntryViewModel);
-		}
+        foreach (AccountEntryViewModel? anAccountEntryViewModel in sortedAccountEntryViewModels)
+        {
+            AccountEntryViewModels.Add(anAccountEntryViewModel);
+        }
 
-		SelectedAccountEntryViewModel = selectedAccountEntryViewModel;
+        SelectedAccountEntryViewModel = selectedAccountEntryViewModel;
 
-		RegisterEventHandlers();
-	}
+        RegisterEventHandlers();
+    }
 
-	private void OnCollectionChanged(
-		object? sender, NotifyCollectionChangedEventArgs e)
-			=> HasChanged = true;
+    private void OnCollectionChanged(
+        object? sender, NotifyCollectionChangedEventArgs e)
+            => HasChanged = true;
 
-	private void OnAccountEntryPropertyChanged(
-		object? sender, PropertyChangedEventArgs e)
-			=> HasChanged = true;
+    private void OnAccountEntryPropertyChanged(
+        object? sender, PropertyChangedEventArgs e)
+            => HasChanged = true;
 }

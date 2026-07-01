@@ -8,10 +8,10 @@ public class AssemblyVersionProvider : IAssemblyVersionProvider
 {
 	public AssemblyVersionProvider()
 	{
-		var major = AssemblyVersion.Major;
-		var minor = AssemblyVersion.Minor;
-		var build = AssemblyVersion.Build.ToString().PadLeft(2, '0');
-		var revision = AssemblyVersion.Revision.ToString().PadLeft(2, '0');
+        int major = AssemblyVersion.Major;
+        int minor = AssemblyVersion.Minor;
+        string build = AssemblyVersion.Build.ToString().PadLeft(2, '0');
+        string revision = AssemblyVersion.Revision.ToString().PadLeft(2, '0');
 
 		AssemblyVersionString = $"Version {major}.{minor}.{build}.{revision}";
 	}

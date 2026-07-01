@@ -1,96 +1,100 @@
 using System.Security.Cryptography;
-using Xunit;
+
 using PasswordSecure.Application.Extensions;
+using PasswordSecure.DomainModel;
+using PasswordSecure.Infrastructure;
 using PasswordSecure.Infrastructure.Services;
+
+using Xunit;
 
 namespace PasswordSecure.Test;
 
 public class DataEncryptionServiceTest
 {
-	public DataEncryptionServiceTest()
-	{
-		_dataEncryptionService = new DataEncryptionService();
-	}
+    public DataEncryptionServiceTest()
+    {
+        _dataEncryptionService = new DataEncryptionService();
+    }
 
-	[Fact]
-	public void EncryptDecrypt_ShortMatchingPassword_ReturnsInitialData()
-	{
-		// Arrange
-		const string serializedDataReference = "plain text";
-		var dataReference = serializedDataReference.ToByteArray();
+    [Fact]
+    public void EncryptDecrypt_ShortMatchingPassword_ReturnsInitialData()
+    {
+        // Arrange
+        const string serializedDataReference = "plain text";
+        byte[] dataReference = serializedDataReference.ToByteArray();
 
-		const string password = "password";
+        const string password = "password";
+        var secure = password.ToSecureString();
+        // Act
+        Vault vault = _dataEncryptionService.EncryptDataToVault(
+            dataReference, secure);
+        byte[] data = _dataEncryptionService.DecryptDataFromVault(vault, secure);
+        string serializedData = data.ToText();
 
-		// Act
-		var vault = _dataEncryptionService.EncryptDataToVault(
-			dataReference, password);
-		var data = _dataEncryptionService.DecryptDataFromVault(vault, password);
-		var serializedData = data.ToText();
+        // Assert
+        Assert.Equal(serializedDataReference, serializedData);
+    }
 
-		// Assert
-		Assert.Equal(serializedDataReference, serializedData);
-	}
+    [Fact]
+    public void EncryptDecrypt_LongMatchingPassword_ReturnsInitialData()
+    {
+        // Arrange
+        const string serializedDataReference = "plain text";
+        byte[] dataReference = serializedDataReference.ToByteArray();
 
-	[Fact]
-	public void EncryptDecrypt_LongMatchingPassword_ReturnsInitialData()
-	{
-		// Arrange
-		const string serializedDataReference = "plain text";
-		var dataReference = serializedDataReference.ToByteArray();
+        const string password = "password_password_password_password";
+        var secure = password.ToSecureString();
 
-		const string password = "password_password_password_password";
+        // Act
+        Vault vault = _dataEncryptionService.EncryptDataToVault(
+            dataReference, secure);
+        byte[] data = _dataEncryptionService.DecryptDataFromVault(vault, secure);
+        string serializedData = data.ToText();
 
-		// Act
-		var vault = _dataEncryptionService.EncryptDataToVault(
-			dataReference, password);
-		var data = _dataEncryptionService.DecryptDataFromVault(vault, password);
-		var serializedData = data.ToText();
+        // Assert
+        Assert.Equal(serializedDataReference, serializedData);
+    }
 
-		// Assert
-		Assert.Equal(serializedDataReference, serializedData);
-	}
+    [Fact]
+    public void EncryptDecrypt_ShortNotMatchingPassword_ThrowsCryptographicException()
+    {
+        // Arrange
+        const string serializedDataReference = "plain text";
+        byte[] dataReference = serializedDataReference.ToByteArray();
 
-	[Fact]
-	public void EncryptDecrypt_ShortNotMatchingPassword_ThrowsCryptographicException()
-	{
-		// Arrange
-		const string serializedDataReference = "plain text";
-		var dataReference = serializedDataReference.ToByteArray();
+        const string encryptionPassword = "encryption password";
+        const string decryptionPassword = "decryption password";
 
-		const string encryptionPassword = "encryption password";
-		const string decryptionPassword = "decryption password";
+        // Act and Assert
+        Vault vault = _dataEncryptionService.EncryptDataToVault(
+            dataReference, encryptionPassword.ToSecureString());
 
-		// Act and Assert
-		var vault = _dataEncryptionService.EncryptDataToVault(
-			dataReference, encryptionPassword);
+        Assert.Throws<CryptographicException>(
+            () => _dataEncryptionService.DecryptDataFromVault(
+                vault, decryptionPassword.ToSecureString())
+        );
+    }
 
-		Assert.Throws<CryptographicException>(
-			() => _dataEncryptionService.DecryptDataFromVault(
-				vault, decryptionPassword)
-		);
-	}
+    [Fact]
+    public void EncryptDecrypt_LongNotMatchingPassword_ThrowsCryptographicException()
+    {
+        // Arrange
+        const string serializedDataReference = "plain text";
+        byte[] dataReference = serializedDataReference.ToByteArray();
 
-	[Fact]
-	public void EncryptDecrypt_LongNotMatchingPassword_ThrowsCryptographicException()
-	{
-		// Arrange
-		const string serializedDataReference = "plain text";
-		var dataReference = serializedDataReference.ToByteArray();
+        const string encryptionPassword =
+            "encryption password_password_password_password";
+        const string decryptionPassword =
+            "decryption password_password_password_password";
+        // Act and Assert
+        Vault vault = _dataEncryptionService.EncryptDataToVault(
+            dataReference, encryptionPassword.ToSecureString());
 
-		const string encryptionPassword =
-			"encryption password_password_password_password";
-		const string decryptionPassword =
-			"decryption password_password_password_password";
+        Assert.Throws<CryptographicException>(
+            () => _dataEncryptionService.DecryptDataFromVault(
+                vault, decryptionPassword.ToSecureString())
+        );
+    }
 
-		// Act and Assert
-		var vault = _dataEncryptionService.EncryptDataToVault(
-			dataReference, encryptionPassword);
-
-		Assert.Throws<CryptographicException>(
-			() => _dataEncryptionService.DecryptDataFromVault(
-				vault, decryptionPassword)
-		);
-	}
-
-	private readonly DataEncryptionService _dataEncryptionService;
+    private readonly DataEncryptionService _dataEncryptionService;
 }

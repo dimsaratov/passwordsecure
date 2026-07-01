@@ -24,7 +24,7 @@ public partial class BackupService : IBackupService
 				return;
 			}
 
-			var backupInfo = GetBackupInfo(filePath);
+            BackupInfo backupInfo = GetBackupInfo(filePath);
 
 			CreateFolderIfNecessary(backupInfo.BackupFolderPath);
 			_fileAccessProvider.CopyFile(filePath, backupInfo.BackupFilePath);
@@ -51,19 +51,19 @@ public partial class BackupService : IBackupService
 
 	private BackupInfo GetBackupInfo(string filePath)
 	{
-		var now = _dateTimeProvider.Now;
+        string now = _dateTimeProvider.Now;
 
-		var fileName = Path.GetFileName(filePath);
-		var fileExtension = Path.GetExtension(fileName);
+        string fileName = Path.GetFileName(filePath);
+        string fileExtension = Path.GetExtension(fileName);
 
-		var backupFolderRootPath = Path.GetDirectoryName(filePath)!;
-		var backupFolderPrefix = Path.GetFileNameWithoutExtension(fileName);
-		var backupFolderName = $"{backupFolderPrefix}_{BackupFolderSuffix}";
-		var backupFolderPath = Path.Combine(
+        string backupFolderRootPath = Path.GetDirectoryName(filePath)!;
+        string backupFolderPrefix = Path.GetFileNameWithoutExtension(fileName);
+        string backupFolderName = $"{backupFolderPrefix}_{BackupFolderSuffix}";
+        string backupFolderPath = Path.Combine(
 			backupFolderRootPath, backupFolderName);
 
-		var backupFileName = $"{backupFolderPrefix}_{now}{fileExtension}";
-		var backupFilePath = Path.Combine(backupFolderPath, backupFileName);
+        string backupFileName = $"{backupFolderPrefix}_{now}{fileExtension}";
+        string backupFilePath = Path.Combine(backupFolderPath, backupFileName);
 
 		var backupInfo = new BackupInfo(
 			backupFolderPath,

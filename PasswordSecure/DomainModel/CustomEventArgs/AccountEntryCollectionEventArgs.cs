@@ -2,17 +2,10 @@ using System;
 
 namespace PasswordSecure.DomainModel.CustomEventArgs;
 
-public class AccountEntryCollectionEventArgs : EventArgs
+public class AccountEntryCollectionEventArgs(
+    AccountEntryCollection? accountEntryCollection, bool hasChanged) : EventArgs
 {
-	public AccountEntryCollectionEventArgs(
-		AccountEntryCollection? accountEntryCollection, bool hasChanged)
-	{
-		AccountEntryCollection = accountEntryCollection;
+    public AccountEntryCollection? AccountEntryCollection { get; } = accountEntryCollection;
 
-		HasChanged = hasChanged;
-	}
-
-	public AccountEntryCollection? AccountEntryCollection { get; }
-
-	public bool HasChanged { get; }
+    public bool HasChanged { get; } = hasChanged;
 }

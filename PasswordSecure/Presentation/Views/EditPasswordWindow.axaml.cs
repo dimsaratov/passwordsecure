@@ -1,161 +1,166 @@
 using System;
+using System.Security;
 using System.Threading.Tasks;
+
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+
 using PasswordSecure.Presentation.Controls.MessageBoxControl;
+
+using static PasswordSecure.Infrastructure.Extenders;
 
 namespace PasswordSecure.Presentation.Views;
 
 public partial class EditPasswordWindow : Window
 {
-	public EditPasswordWindow()
-	{
-		InitializeComponent();
+    public EditPasswordWindow()
+    {
+        InitializeComponent();
 
-		_isPasswordAccepted = false;
+        _isPasswordAccepted = false;
 
-		AddHandler(KeyDownEvent, OnKeyPressing, RoutingStrategies.Tunnel);
-	}
+        AddHandler(KeyDownEvent, OnKeyPressing, RoutingStrategies.Tunnel);
+    }
 
-	public int MinimumPasswordLength { get; set; }
+    public int MinimumPasswordLength { get; set; }
 
-	private bool _isPasswordAccepted;
+    private bool _isPasswordAccepted;
 
-	private string? _initialPassword;
+    private SecureString? _initialPassword;
 
-	private void OnLoaded(object? sender, RoutedEventArgs e)
-	{
-		_initialPassword = TextBoxPassword.Text;
+    private void OnLoaded(object? sender, RoutedEventArgs e)
+    {
+        _initialPassword = TextBoxPassword.Password;
 
-		TextBoxPassword.Focus();
-	}
+        TextBoxPassword.Focus();
+    }
 
-	private void OnClosing(object? sender, WindowClosingEventArgs e)
-	{
-		if (!_isPasswordAccepted)
-		{
-			TextBoxPassword.Text = _initialPassword;
-		}
-	}
+    private void OnClosing(object? sender, WindowClosingEventArgs e)
+    {
+        if (!_isPasswordAccepted)
+        {
+            TextBoxPassword.Password = _initialPassword;
+        }
+    }
 
-	private async void OnKeyPressing(object? sender, KeyEventArgs e)
-	{
-		if (e.Key == Key.Enter)
-		{
-			_isPasswordAccepted = await CanContinue();
+    private async void OnKeyPressing(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            _isPasswordAccepted = await CanContinue();
 
-			if (_isPasswordAccepted)
-			{
-				Close();
-			}
+            if (_isPasswordAccepted)
+            {
+                Close();
+            }
 
-			e.Handled = true;
-		}
-		else if (e.Key == Key.Escape)
-		{
-			_isPasswordAccepted = false;
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            _isPasswordAccepted = false;
 
-			Close();
+            Close();
 
-			e.Handled = true;
-		}
-	}
+            e.Handled = true;
+        }
+    }
 
-	private void OnCancelButtonClick(object? sender, RoutedEventArgs e)
-	{
-		_isPasswordAccepted = false;
+    private void OnCancelButtonClick(object? sender, RoutedEventArgs e)
+    {
+        _isPasswordAccepted = false;
 
-		Close();
-	}
+        Close();
+    }
 
-	private async void OnOkButtonClick(object? sender, RoutedEventArgs e)
-	{
-		_isPasswordAccepted = await CanContinue();
+    private async void OnOkButtonClick(object? sender, RoutedEventArgs e)
+    {
+        _isPasswordAccepted = await CanContinue();
 
-		if (_isPasswordAccepted)
-		{
-			Close();
-		}
-	}
+        if (_isPasswordAccepted)
+        {
+            Close();
+        }
+    }
 
-	private async Task<bool> CanContinue()
-	{
-		if (IsPasswordTooShort)
-		{
-			await DisplayPasswordTooShortErrorMessage();
+    private async Task<bool> CanContinue()
+    {
+        if (IsPasswordTooShort)
+        {
+            await DisplayPasswordTooShortErrorMessage();
 
-			return false;
-		}
+            return false;
+        }
 
-		if (IsPasswordMismatch)
-		{
-			await DisplayPasswordMismatchErrorMessage();
+        if (!IsPasswordMismatch)
+        {
+            await DisplayPasswordMismatchErrorMessage();
 
-			return false;
-		}
+            return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	private bool IsPasswordTooShort
-	{
-		get
-		{
-			var isPasswordTooShort = false;
+    private bool IsPasswordTooShort
+    {
+        get
+        {
+            bool isPasswordTooShort = false;
 
-			if (TextBoxPassword.Text is not null)
-			{
-				isPasswordTooShort =
-					TextBoxPassword.Text.Length < MinimumPasswordLength;
-			}
+            if (TextBoxPassword.Password is not null)
+            {
+                isPasswordTooShort =
+                    TextBoxPassword.Password.Length < MinimumPasswordLength;
+            }
 
-			return isPasswordTooShort;
-		}
-	}
+            return isPasswordTooShort;
+        }
+    }
 
-	private async Task DisplayPasswordTooShortErrorMessage()
-	{
-		await MessageBoxManager.ShowDialogAsync(
-			"Password Too Short Error",
-			$"The password is too short.{Environment.NewLine}{Environment.NewLine}Minimum password length is {MinimumPasswordLength} characters.",
-			MessageBoxType.Error,
-			this);
-	}
+    private async Task DisplayPasswordTooShortErrorMessage()
+    {
+        await MessageBoxManager.ShowDialogAsync(
+            "Password Too Short Error",
+            $"The password is too short.{Environment.NewLine}{Environment.NewLine}Minimum password length is {MinimumPasswordLength} characters.",
+            MessageBoxType.Error,
+            this);
+    }
 
-	private bool IsPasswordMismatch
-	{
-		get
-		{
-			var isPasswordMismatch = false;
+    private bool IsPasswordMismatch
+    {
+        get
+        {
+            bool isPasswordMismatch = false;
 
-			if (TextBoxPassword.Text == string.Empty)
-			{
-				TextBoxPassword.Text = null;
-			}
+            if (TextBoxPassword.Password?.Length == 0)
+            {
+                TextBoxPassword.Password = null;
+            }
 
-			if (TextBoxConfirmPassword.Text == string.Empty)
-			{
-				TextBoxConfirmPassword.Text = null;
-			}
+            if (TextBoxConfirmPassword.Password?.Length == 0)
+            {
+                TextBoxConfirmPassword.Password = null;
+            }
 
-			if (TextBoxPassword.Text is not null ||
-				TextBlockConfirmPassword.Text is not null)
-			{
-				isPasswordMismatch =
-					TextBoxPassword.Text != TextBoxConfirmPassword.Text;
-			}
+            if (TextBoxPassword.Password is not null ||
+                TextBoxConfirmPassword.Password is not null)
+            {
+                isPasswordMismatch =
+                    TextBoxPassword.Password.SecureStringEquals(TextBoxConfirmPassword.Password);
+            }
 
-			return isPasswordMismatch;
-		}
-	}
+            return isPasswordMismatch;
+        }
+    }
 
-	private async Task DisplayPasswordMismatchErrorMessage()
-	{
-		await MessageBoxManager.ShowDialogAsync(
-			"Password Mismatch Error",
-			"The password and the confirmed password do not match.",
-			MessageBoxType.Error,
-			this);
-	}
+    private async Task DisplayPasswordMismatchErrorMessage()
+    {
+        await MessageBoxManager.ShowDialogAsync(
+            "Password Mismatch Error",
+            "The password and the confirmed password do not match.",
+            MessageBoxType.Error,
+            this);
+    }
 }

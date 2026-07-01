@@ -22,7 +22,7 @@ public class EncryptedDataFolderProvider : IEncryptedDataFolderProvider
 
 		if (_environmentSettingsProvider.IsInsideFlatpakContainer)
 		{
-			var userFlatpakConfigFolderPath = Environment.GetFolderPath(
+            string userFlatpakConfigFolderPath = Environment.GetFolderPath(
 				Environment.SpecialFolder.ApplicationData);
 
 			try
@@ -30,9 +30,9 @@ public class EncryptedDataFolderProvider : IEncryptedDataFolderProvider
 				var userFlatpakConfigFolderInfo = new DirectoryInfo(
 					userFlatpakConfigFolderPath);
 
-				var userFlatpakAppFolderInfo =
+                DirectoryInfo? userFlatpakAppFolderInfo =
 					userFlatpakConfigFolderInfo.Parent;
-				var userFlatpakAppFolderPath =
+                string userFlatpakAppFolderPath =
 					userFlatpakAppFolderInfo!.FullName;
 
 				encryptedDataFolderPath = Path.Combine(

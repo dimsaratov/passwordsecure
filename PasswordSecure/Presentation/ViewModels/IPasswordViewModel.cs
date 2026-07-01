@@ -1,6 +1,8 @@
+using System.Security;
+
 namespace PasswordSecure.Presentation.ViewModels;
 
 public interface IPasswordViewModel
 {
-	string? Password { get; set; }
+    SecureString? Password { get; set; }
 }

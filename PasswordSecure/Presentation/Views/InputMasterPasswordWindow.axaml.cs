@@ -6,59 +6,59 @@ namespace PasswordSecure.Presentation.Views;
 
 public partial class InputMasterPasswordWindow : Window
 {
-	public InputMasterPasswordWindow()
-	{
-		InitializeComponent();
+    public InputMasterPasswordWindow()
+    {
+        InitializeComponent();
 
-		_isPasswordAccepted = false;
+        _isPasswordAccepted = false;
 
-		AddHandler(KeyDownEvent, OnKeyPressing, RoutingStrategies.Tunnel);
-	}
+        AddHandler(KeyDownEvent, OnKeyPressing, RoutingStrategies.Tunnel);
+    }
 
-	private bool _isPasswordAccepted;
+    private bool _isPasswordAccepted;
 
-	private void OnLoaded(object? sender, RoutedEventArgs e)
-		=> TextBoxPassword.Focus();
+    private void OnLoaded(object? sender, RoutedEventArgs e)
+        => TextBoxPassword.Focus();
 
-	private void OnClosing(object? sender, WindowClosingEventArgs e)
-	{
-		if (!_isPasswordAccepted)
-		{
-			TextBoxPassword.Text = null;
-		}
-	}
+    private void OnClosing(object? sender, WindowClosingEventArgs e)
+    {
+        if (!_isPasswordAccepted)
+        {
+            TextBoxPassword.Password = null;
+        }
+    }
 
-	private void OnKeyPressing(object? sender, KeyEventArgs e)
-	{
-		if (e.Key == Key.Enter)
-		{
-			_isPasswordAccepted = true;
+    private void OnKeyPressing(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            _isPasswordAccepted = true;
 
-			Close();
+            Close();
 
-			e.Handled = true;
-		}
-		else if (e.Key == Key.Escape)
-		{
-			_isPasswordAccepted = false;
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            _isPasswordAccepted = false;
 
-			Close();
+            Close();
 
-			e.Handled = true;
-		}
-	}
+            e.Handled = true;
+        }
+    }
 
-	private void OnCancelButtonClick(object? sender, RoutedEventArgs e)
-	{
-		_isPasswordAccepted = false;
+    private void OnCancelButtonClick(object? sender, RoutedEventArgs e)
+    {
+        _isPasswordAccepted = false;
 
-		Close();
-	}
+        Close();
+    }
 
-	private void OnOkButtonClick(object? sender, RoutedEventArgs e)
-	{
-		_isPasswordAccepted = true;
+    private void OnOkButtonClick(object? sender, RoutedEventArgs e)
+    {
+        _isPasswordAccepted = true;
 
-		Close();
-	}
+        Close();
+    }
 }
