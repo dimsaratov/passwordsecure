@@ -1,4 +1,5 @@
 using Avalonia.Markup.Xaml;
+
 using PasswordSecure.Application.Providers;
 using PasswordSecure.Application.Services;
 using PasswordSecure.Infrastructure.Providers;
@@ -10,50 +11,50 @@ namespace PasswordSecure;
 
 public class App : Avalonia.Application
 {
-	public override void Initialize()
-	{
-		AvaloniaXamlLoader.Load(this);
-	}
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
 
-	public override void OnFrameworkInitializationCompleted()
-	{
-		IDataSerializationService jsonDataSerializationService =
-			new JsonDataSerializationService();
+    public override void OnFrameworkInitializationCompleted()
+    {
+        IDataSerializationService jsonDataSerializationService =
+            new JsonDataSerializationService();
 
-		IDataEncryptionService dataEncryptionService =
-			new DataEncryptionService();
+        IDataEncryptionService dataEncryptionService =
+            new DataEncryptionService();
 
-		IFileAccessProvider fileAccessProvider = new FileAccessProvider();
-		IDateTimeProvider currentDateTimeProvider =
-			new CurrentDateTimeProvider();
-		IBackupService backupService =
-			new BackupService(fileAccessProvider, currentDateTimeProvider);
+        IFileAccessProvider fileAccessProvider = new FileAccessProvider();
+        IDateTimeProvider currentDateTimeProvider =
+            new CurrentDateTimeProvider();
+        IBackupService backupService =
+            new BackupService(fileAccessProvider, currentDateTimeProvider);
 
-		IDataAccessService dataAccessService = new DataAccessService(
-			fileAccessProvider,
-			jsonDataSerializationService,
-			dataEncryptionService,
-			backupService);
+        IDataAccessService dataAccessService = new DataAccessService(
+            fileAccessProvider,
+            jsonDataSerializationService,
+            dataEncryptionService,
+            backupService);
 
-		IDataAccessService dataAccessServiceDecorated =
-			new TaskDecoratorDataAccessService(dataAccessService);
+        IDataAccessService dataAccessServiceDecorated =
+            new TaskDecoratorDataAccessService(dataAccessService);
 
-		IAssemblyVersionProvider assemblyVersionProvider =
-			new AssemblyVersionProvider();
+        IAssemblyVersionProvider assemblyVersionProvider =
+            new AssemblyVersionProvider();
 
-		IEnvironmentSettingsProvider environmentSettingsProvider =
-			new EnvironmentSettingsProvider();
-		IEncryptedDataFolderProvider encryptedDataFolderProvider =
-			new EncryptedDataFolderProvider(environmentSettingsProvider);
+        IEnvironmentSettingsProvider environmentSettingsProvider =
+            new EnvironmentSettingsProvider();
+        IEncryptedDataFolderProvider encryptedDataFolderProvider =
+            new EncryptedDataFolderProvider(environmentSettingsProvider);
 
-		var mainWindow = new MainWindow();
+        var mainWindow = new MainWindow();
 
-		var mainPresenter = new MainPresenter(
-			dataAccessServiceDecorated,
-			assemblyVersionProvider,
-			encryptedDataFolderProvider,
-			mainWindow);
+        _ = new MainPresenter(
+            dataAccessServiceDecorated,
+            assemblyVersionProvider,
+            encryptedDataFolderProvider,
+            mainWindow);
 
-		mainWindow.Show();
-	}
+        mainWindow.Show();
+    }
 }

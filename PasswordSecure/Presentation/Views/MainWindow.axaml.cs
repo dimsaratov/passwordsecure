@@ -12,17 +12,11 @@ namespace PasswordSecure.Presentation.Views;
 
 public partial class MainWindow : Window
 {
-
-
     public MainWindow()
     {
         InitializeComponent();
-
         _shouldAllowWindowClose = false;
     }
-
-
-
 
     public event EventHandler? VisualStateChanged;
 
@@ -35,9 +29,12 @@ public partial class MainWindow : Window
     public event EventHandler<AccountEntryCollectionEventArgs>? WindowClosing;
 
     public event EventHandler? HelpMenuClicked;
+    public event EventHandler? GenMenuClicked;
 
     public void SetActiveFilePath(string? filePath)
-        => TextBlockActiveFilePath.Text = filePath;
+    {
+        TextBlockActiveFilePath.Text = filePath;
+    }
 
     public void EnableControls()
     {
@@ -192,6 +189,11 @@ public partial class MainWindow : Window
 
     private void OnMenuItemHelpClick(object? sender, RoutedEventArgs e)
         => HelpMenuClicked?.Invoke(this, EventArgs.Empty);
+
+
+    private async void OnMenuItemGenClick(object? sender, RoutedEventArgs e)
+        => GenMenuClicked?.Invoke(this, EventArgs.Empty);
+
 
     private AccountEntryCollectionEventArgs GetAccountEntryCollectionEventArgs()
     {

@@ -2,10 +2,11 @@ using System.Security.Cryptography;
 
 using PasswordSecure.Application.Extensions;
 using PasswordSecure.DomainModel;
-using PasswordSecure.Infrastructure;
 using PasswordSecure.Infrastructure.Services;
 
 using Xunit;
+
+using static PasswordGenerator.Extenders;
 
 namespace PasswordSecure.Test;
 

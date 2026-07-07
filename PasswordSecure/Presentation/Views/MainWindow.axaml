@@ -63,6 +63,10 @@
           Click="OnMenuItemHelpClick"
           Header="_Help"
           Name="MenuItemHelp" />
+      <MenuItem
+          Click="OnMenuItemGenClick"
+          Header="_Generate"
+          Name="MenuItemGen" />
     </Menu>
 
     <Grid Grid.Row="1">

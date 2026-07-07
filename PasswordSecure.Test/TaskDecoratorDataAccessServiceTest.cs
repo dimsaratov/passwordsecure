@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 using PasswordSecure.Application.Providers;
 using PasswordSecure.Application.Services;
 using PasswordSecure.DomainModel;
-using PasswordSecure.Infrastructure;
 using PasswordSecure.Infrastructure.Providers;
 using PasswordSecure.Infrastructure.Services;
 using PasswordSecure.Presentation;
 
 using Xunit;
 
+using static PasswordGenerator.Extenders;
 namespace PasswordSecure.Test;
 
 public class TaskDecoratorDataAccessServiceTest

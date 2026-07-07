@@ -6,6 +6,8 @@ using System.Security.Cryptography;
 using PasswordSecure.Application.Services;
 using PasswordSecure.DomainModel;
 
+using static PasswordGenerator.Extenders;
+
 namespace PasswordSecure.Infrastructure.Services;
 
 public class DataEncryptionService : IDataEncryptionService

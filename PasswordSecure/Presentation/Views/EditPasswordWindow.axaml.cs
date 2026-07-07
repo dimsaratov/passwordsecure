@@ -6,9 +6,13 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
-using PasswordSecure.Presentation.Controls.MessageBoxControl;
+using PasswordGenerator;
 
-using static PasswordSecure.Infrastructure.Extenders;
+using PasswordSecure.Presentation.Controls.MessageBoxControl;
+using PasswordSecure.Presentation.ViewModels;
+
+using static PasswordGenerator.Extenders;
+
 
 namespace PasswordSecure.Presentation.Views;
 
@@ -17,10 +21,15 @@ public partial class EditPasswordWindow : Window
     public EditPasswordWindow()
     {
         InitializeComponent();
-
         _isPasswordAccepted = false;
-
+        _settings = new();
         AddHandler(KeyDownEvent, OnKeyPressing, RoutingStrategies.Tunnel);
+
+    }
+    public EditPasswordWindow(GenerationSettings g_settings) : this()
+    {
+
+        _settings = g_settings;
     }
 
     public int MinimumPasswordLength { get; set; }
@@ -28,6 +37,8 @@ public partial class EditPasswordWindow : Window
     private bool _isPasswordAccepted;
 
     private SecureString? _initialPassword;
+
+    private readonly GenerationSettings _settings;
 
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
@@ -72,6 +83,15 @@ public partial class EditPasswordWindow : Window
         _isPasswordAccepted = false;
 
         Close();
+    }
+
+    private async void OnButtonGenerateClick(object? sender, RoutedEventArgs e)
+    {
+        var passwordGeneratorView = new PasswordGeneratorView();
+        {
+            DataContext = new PasswordGeneratorViewModel(_settings);
+        }
+        await passwordGeneratorView.ShowDialog(this);
     }
 
     private async void OnOkButtonClick(object? sender, RoutedEventArgs e)

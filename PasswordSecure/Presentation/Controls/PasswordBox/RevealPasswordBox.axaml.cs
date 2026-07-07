@@ -10,7 +10,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 
-using PasswordSecure.Infrastructure;
+using static PasswordGenerator.Extenders;
 
 namespace PasswordSecure.Presentation.Controls
 {

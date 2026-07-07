@@ -19,12 +19,13 @@ namespace PasswordSecure.Presentation;
 
 public class MainPresenter
 {
+    private AppSettings? appSettings;
+
     static MainPresenter()
     {
         EncryptedFileTypes = GetEncryptedFileTypes();
     }
 
-    private AppSettings? _settings;
 
     public MainPresenter(
         IDataAccessService dataAccessService,
@@ -48,34 +49,44 @@ public class MainPresenter
         _mainWindow.Opened += OnWindow_Opened;
 
         _mainWindow.HelpMenuClicked += OnHelpMenuClicked;
+        _mainWindow.GenMenuClicked += OnGenMenuClicked;
 
         _accessParams = new AccessParams();
 
         _encryptedDataFolderPath =
             encryptedDataFolderProvider.GetEncryptedDataFolderPath();
+    }
 
+    private async void OnGenMenuClicked(object? sender, EventArgs e)
+    {
+        if (appSettings is null || appSettings.GenerationSettings is null)
+        {
+            return;
+        }
+        var passwordGeneratorView = new PasswordGeneratorView()
+        {
+            DataContext = new PasswordGeneratorViewModel(appSettings.GenerationSettings)
+        };
+        await passwordGeneratorView.ShowDialog(_mainWindow);
     }
 
     private void OnWindow_Opened(object? sender, EventArgs e)
     {
-
-        _settings = SettingsService.Load();
+        appSettings = SettingsService.Load();
         RestoreState();
     }
 
     private async void RestoreState()
     {
-        if (_settings is null)
+        appSettings ??= new();
+
+        if (System.IO.File.Exists(appSettings.LastFile))
         {
-            return;
+            await LoadEncryptedContainer(appSettings.LastFile);
         }
-        if (System.IO.File.Exists(_settings.LastFile))
+        if (appSettings.WindowWidth > 0)
         {
-            await LoadEncryptedContainer(_settings.LastFile);
-        }
-        if (_settings.WindowWidth > 0)
-        {
-            _mainWindow.Width = _settings.WindowWidth;
+            _mainWindow.Width = appSettings.WindowWidth;
         }
     }
 
@@ -245,12 +256,12 @@ public class MainPresenter
             await _mainWindow.StorageProvider.SaveFilePickerAsync(
                 encryptedFileCreateOptions);
 
-        if (encryptedFile is null)
+        if (encryptedFile is null || appSettings is null)
         {
             return;
         }
 
-        var createMasterPasswordWindow = new CreateMasterPasswordWindow
+        var createMasterPasswordWindow = new CreateMasterPasswordWindow(appSettings.GenerationSettings)
         {
             MinimumPasswordLength = MinimumMasterPasswordLength
         };
@@ -267,6 +278,8 @@ public class MainPresenter
 
         _accessParams.FilePath = encryptedFile.Path.LocalPath;
         _mainWindow.SetActiveFilePath(_accessParams.FilePath);
+        appSettings?.LastFile = _accessParams.FilePath;
+
 
         _accessParams.IsNewContainer = true;
 
@@ -323,7 +336,8 @@ public class MainPresenter
 
         _accessParams.FilePath = localPath;
         _mainWindow.SetActiveFilePath(_accessParams.FilePath);
-        _settings?.LastFile = _accessParams.FilePath;
+        appSettings?.LastFile = _accessParams.FilePath;
+
 
         AccountEntryCollection accountEntryCollection =
             await _dataAccessService.ReadAccountEntries(_accessParams);
@@ -341,8 +355,8 @@ public class MainPresenter
             await _dataAccessService.SaveAccountEntries(
                 _accessParams, accountEntryCollection);
 
-            _settings?.WindowWidth = _mainWindow.Width;
-            SettingsService.Save(_settings);
+            appSettings?.WindowWidth = _mainWindow.Width;
+            SettingsService.Save(appSettings);
 
             _mainWindow.ResetHasChangedFlag();
         }
@@ -385,6 +399,7 @@ public class MainPresenter
         _accessParams.FilePath = null;
 
         _mainWindow.ClearData();
+        appSettings?.LastFile = string.Empty;
     }
 
     private async Task<IStorageFolder?> GetEncryptedDataFolder()

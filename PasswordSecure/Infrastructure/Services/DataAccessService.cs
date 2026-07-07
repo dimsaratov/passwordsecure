@@ -11,21 +11,12 @@ using PasswordSecure.DomainModel;
 
 namespace PasswordSecure.Infrastructure.Services;
 
-public class DataAccessService : IDataAccessService
+public class DataAccessService(
+    IFileAccessProvider fileAccessProvider,
+    IDataSerializationService dataSerializationService,
+    IDataEncryptionService dataEncryptionService,
+    IBackupService backupService) : IDataAccessService
 {
-    public DataAccessService(
-        IFileAccessProvider fileAccessProvider,
-        IDataSerializationService dataSerializationService,
-        IDataEncryptionService dataEncryptionService,
-        IBackupService backupService)
-    {
-        _fileAccessProvider = fileAccessProvider;
-
-        _dataSerializationService = dataSerializationService;
-        _dataEncryptionService = dataEncryptionService;
-        _backupService = backupService;
-    }
-
     public async Task<AccountEntryCollection> ReadAccountEntries(
         AccessParams accessParams)
     {
@@ -102,11 +93,11 @@ public class DataAccessService : IDataAccessService
 
     private static readonly Encoding Encoding = Encoding.UTF8;
 
-    private readonly IFileAccessProvider _fileAccessProvider;
+    private readonly IFileAccessProvider _fileAccessProvider = fileAccessProvider;
 
-    private readonly IDataSerializationService _dataSerializationService;
-    private readonly IDataEncryptionService _dataEncryptionService;
-    private readonly IBackupService _backupService;
+    private readonly IDataSerializationService _dataSerializationService = dataSerializationService;
+    private readonly IDataEncryptionService _dataEncryptionService = dataEncryptionService;
+    private readonly IBackupService _backupService = backupService;
 
     private static string FileReadError(string filePath)
         => $@"Could not read data from file ""{filePath}"".";

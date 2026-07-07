@@ -12,8 +12,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using PasswordSecure.DomainModel;
-using PasswordSecure.Infrastructure;
 using PasswordSecure.Presentation.Views;
+
+using static PasswordGenerator.Extenders;
+
 
 namespace PasswordSecure.Presentation.ViewModels;
 
@@ -168,7 +170,7 @@ public class AccountEntryCollectionViewModel : ObservableObject
 
                 if (selectedAccountEntryViewModel is not null)
                 {
-                    var editPasswordWindow = new EditPasswordWindow
+                    var editPasswordWindow = new EditPasswordWindow()
                     {
                         DataContext = selectedAccountEntryViewModel
                     };

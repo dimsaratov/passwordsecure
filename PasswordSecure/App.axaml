@@ -1,42 +1,134 @@
-<Application xmlns="https://github.com/avaloniaui"
-			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-			 x:Class="PasswordSecure.App"
-       xmlns:semi="https://irihi.tech/semi"
-			 RequestedThemeVariant="Default">
+<Application
+    x:Class="PasswordSecure.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:semi="https://irihi.tech/semi"
+    RequestedThemeVariant="Default">
 
-	<Application.Styles>
-		<FluentTheme/>
+    <Application.Resources>
+        <Style x:Key="CatchTextStyle" Selector="TextBlock.catch">
+            <!--<Setter Property="FontSize" Value="14" />-->
+            <Setter Property="Foreground" Value="Red" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="FontStyle" Value="Italic" />
+            <Setter Property="Margin" Value="5,0,5,0" />
+        </Style>
+    </Application.Resources>
 
-		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+    <Application.Styles>
+        <FluentTheme />
 
-		<Style Selector="Button">
-			<Setter Property="CornerRadius" Value="5"/>
-			<Setter Property="Margin" Value="5"/>
-			<Setter Property="Cursor" Value="Hand"/>
-		</Style>
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
 
-		<Style Selector="DataGrid">
-			<Setter Property="Margin" Value="5"/>
-		</Style>
+        <Style Selector="TextBlock.catch">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="Red" />
+            <Setter Property="FontStyle" Value="Italic" />
+            <Setter Property="Margin" Value="5,0,5,0" />
+        </Style>
 
-		<Style Selector="DataGridCell Rectangle">
-			<Setter Property="IsVisible" Value="False"/>
-		</Style>
+        <Style Selector="Button">
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
 
-		<Style Selector="TextBlock">
-			<Setter Property="Margin" Value="5"/>
-			<Setter Property="VerticalAlignment" Value="Center"/>
-		</Style>
+        <Style Selector="DataGrid">
+            <Setter Property="Margin" Value="5" />
+        </Style>
 
-		<Style Selector="TextBox">
-			<Setter Property="Margin" Value="5"/>
-      <Setter Property="Padding" Value="5,4"/>
-      <Setter Property="VerticalContentAlignment" Value="Center"/>
-    </Style>
+        <Style Selector="DataGridCell Rectangle">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
 
-    <Style Selector="TextBox.CenteredPlaceholder">
-      <Setter Property="VerticalContentAlignment" Value="Center" />
-    </Style>
-	</Application.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Padding" Value="5,4" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="TextBox.CenteredPlaceholder">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="NumericUpDown /template/ ButtonSpinner">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <DockPanel>
+                            <UniformGrid
+                                DockPanel.Dock="Right"
+                                IsVisible="{TemplateBinding ShowButtonSpinner}"
+                                Name="PART_SpinnerPanel"
+                                Rows="2">
+                                <RepeatButton
+                                    VerticalContentAlignment="Center"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    Focusable="False"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    Name="PART_IncreaseButton">
+                                    <!-- Явно задаем стиль с нормальным состоянием -->
+                                    <RepeatButton.Styles>
+                                        <Style Selector="RepeatButton:pointerover">
+                                            <Setter Property="Background" Value="{TemplateBinding Background}" />
+                                        </Style>
+                                        <Style Selector="RepeatButton:pressed">
+                                            <Setter Property="Background" Value="{TemplateBinding Background}" />
+                                        </Style>
+                                    </RepeatButton.Styles>
+                                    <Path
+                                        Width="10"
+                                        Height="5"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Data="{StaticResource ButtonSpinnerIncreaseButtonIcon}"
+                                        Fill="{TemplateBinding Foreground}"
+                                        Stretch="Uniform" />
+                                </RepeatButton>
+                                <RepeatButton
+                                    VerticalContentAlignment="Center"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    Focusable="False"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    Name="PART_DecreaseButton">
+                                    <RepeatButton.Styles>
+                                        <Style Selector="RepeatButton:pointerover">
+                                            <Setter Property="Background" Value="{TemplateBinding Background}" />
+                                        </Style>
+                                        <Style Selector="RepeatButton:pressed">
+                                            <Setter Property="Background" Value="{TemplateBinding Background}" />
+                                        </Style>
+                                    </RepeatButton.Styles>
+                                    <Path
+                                        Width="10"
+                                        Height="5"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Data="{StaticResource ButtonSpinnerDecreaseButtonIcon}"
+                                        Fill="{TemplateBinding Foreground}"
+                                        Stretch="Uniform" />
+                                </RepeatButton>
+                            </UniformGrid>
+                            <ContentPresenter
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                Name="PART_ContentPresenter"
+                                Padding="{TemplateBinding Padding}" />
+                        </DockPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+    </Application.Styles>
 
 </Application>
