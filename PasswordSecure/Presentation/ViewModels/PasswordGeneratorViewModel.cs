@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Security;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -19,18 +18,18 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
 
     public PasswordGeneratorViewModel(GenerationSettings settings)
     {
-        this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
-
-        // Подписываемся на ошибки валидации
+        this.settings = settings.Clone() ?? throw new ArgumentNullException(nameof(settings));
         this.settings.ErrorsChanged += OnSettingsErrorsChanged;
-
-        // Подписываемся на изменения свойств
         this.settings.PropertyChanged += OnSettingsPropertyChanged;
+
+        if (settings.IsCorrect)
+        {
+            Password = Generator.Generate(this.settings);
+        }
     }
 
     private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // Пробрасываем изменения свойств из settings в ViewModel
         switch (e.PropertyName)
         {
             case nameof(settings.MinLength):
@@ -58,18 +57,18 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
             case nameof(settings.SpecialChars):
                 OnPropertyChanged(nameof(SpecialChars));
                 break;
+            default:
+                break;
         }
     }
 
     private void OnSettingsErrorsChanged(object? sender, DataErrorsChangedEventArgs e)
     {
-        // Обновляем сообщение об ошибке при изменении ошибок валидации
         UpdateMessageSpecialChars();
     }
 
     private void UpdateMessageSpecialChars()
     {
-        // Получаем ошибки для свойства Symbols
         IEnumerable errors = settings.GetErrors(nameof(settings.Symbols));
         List<string> errorList = errors?.Cast<string>().ToList() ?? [];
 
@@ -83,7 +82,7 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
         }
     }
 
-    public string Password
+    internal string? Password
     {
         get;
         set
@@ -94,7 +93,9 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
                 OnPropertyChanged();
             }
         }
-    } = string.Empty;
+    }
+
+    internal GenerationSettings GetGenerationSettings() => settings;
 
     public bool UseUppercase { get => settings.UseUppercase; set => settings.UseUppercase = value; }
 
@@ -127,6 +128,8 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
         }
     }
 
+    public System.Security.SecureString? GetPassword() => Password?.ToSecureString();
+
     [RelayCommand]
     private void Generate()
     {
@@ -140,10 +143,7 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
     private void ResetSymbols()
     {
         settings.DefaultSpecialChars();
-        // MessageSpecialChars обновится через события ErrorsChanged
     }
-
-    public SecureString GetNewPassword() => Generator.GenerateAsSecure(settings);
 
     protected virtual void Dispose(bool disposing)
     {

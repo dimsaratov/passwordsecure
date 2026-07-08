@@ -7,7 +7,6 @@ using PasswordSecure.Application.Services;
 using PasswordSecure.DomainModel;
 using PasswordSecure.Infrastructure.Providers;
 using PasswordSecure.Infrastructure.Services;
-using PasswordSecure.Presentation;
 
 using Xunit;
 
@@ -130,7 +129,7 @@ public class TaskDecoratorDataAccessServiceTest
             Name = name,
             Url = url,
             User = user,
-            Password = MainPresenter.GetSecure(password),
+            Password = password.ToSecureString()
         };
 
         var accountEntryCollectionReference =
@@ -181,7 +180,7 @@ public class TaskDecoratorDataAccessServiceTest
             Name = name1,
             Url = url1,
             User = user1,
-            Password = MainPresenter.GetSecure(password1),
+            Password = password1.ToSecureString(),
         };
 
         const string name2 = "Microsoft";
@@ -194,7 +193,7 @@ public class TaskDecoratorDataAccessServiceTest
             Name = name2,
             Url = url2,
             User = user2,
-            Password = MainPresenter.GetSecure(password2),
+            Password = password2.ToSecureString(),
         };
 
         var accountEntryCollectionReference = new AccountEntryCollection
@@ -255,7 +254,7 @@ public class TaskDecoratorDataAccessServiceTest
             Name = name1,
             Url = url1,
             User = user1,
-            Password = MainPresenter.GetSecure(password1),
+            Password = password1.ToSecureString(),
         };
 
         const string name2 = "Microsoft";
@@ -268,7 +267,7 @@ public class TaskDecoratorDataAccessServiceTest
             Name = name2,
             Url = url2,
             User = user2,
-            Password = MainPresenter.GetSecure(password2),
+            Password = password2.ToSecureString(),
         };
 
         const string name1Changed = "Google Mail";
@@ -292,7 +291,7 @@ public class TaskDecoratorDataAccessServiceTest
         accountEntryCollection[0].Name = name1Changed;
         accountEntryCollection[0].Url = url1Changed;
         accountEntryCollection[0].User = user1Changed;
-        accountEntryCollection[0].Password = MainPresenter.GetSecure(password1Changed);
+        accountEntryCollection[0].Password = password1Changed.ToSecureString();
 
         await _taskDecoratorDataAccessService.SaveAccountEntries(
             accessParams, accountEntryCollection);
@@ -345,7 +344,7 @@ public class TaskDecoratorDataAccessServiceTest
             Name = name1,
             Url = url1,
             User = user1,
-            Password = MainPresenter.GetSecure(password1),
+            Password = password1.ToSecureString(),
         };
 
         const string name2 = "Microsoft";
@@ -358,7 +357,7 @@ public class TaskDecoratorDataAccessServiceTest
             Name = name2,
             Url = url2,
             User = user2,
-            Password = MainPresenter.GetSecure(password2),
+            Password = password2.ToSecureString(),
         };
 
         const string name1Changed = "Google Mail";
@@ -371,7 +370,7 @@ public class TaskDecoratorDataAccessServiceTest
             Name = name1Changed,
             Url = url1Changed,
             User = user1Changed,
-            Password = MainPresenter.GetSecure(password1Changed),
+            Password = password1Changed.ToSecureString(),
         };
 
         var accountEntryCollectionReference = new AccountEntryCollection
@@ -416,7 +415,7 @@ public class TaskDecoratorDataAccessServiceTest
         Assert.Equal(password2, secondAccountEntryChanged.Password?.ToPasswordString());
     }
 
-    private readonly SecureString Password = MainPresenter.GetSecure("Master Password");
+    private readonly SecureString Password = "Master Password".ToSecureString();
 
     private readonly TaskDecoratorDataAccessService
         _taskDecoratorDataAccessService;

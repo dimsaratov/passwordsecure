@@ -8,6 +8,7 @@ namespace PasswordSecure.Behaviors
 {
     public class SpecialCharsOnlyBehavior : Behavior<TextBox>
     {
+
         protected override void OnAttached()
         {
             base.OnAttached();

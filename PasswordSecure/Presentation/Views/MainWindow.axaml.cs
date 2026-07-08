@@ -21,27 +21,27 @@ public partial class MainWindow : Window
     public event EventHandler? VisualStateChanged;
 
     public event EventHandler<AccountEntryCollectionEventArgs>? NewMenuClicked;
+
     public event EventHandler<AccountEntryCollectionEventArgs>? OpenMenuClicked;
+
     public event EventHandler<AccountEntryCollectionEventArgs>? SaveMenuClicked;
+
     public event EventHandler<AccountEntryCollectionEventArgs>?
         CloseMenuClicked;
+
     public event EventHandler<AccountEntryCollectionEventArgs>? ExitMenuClicked;
+
     public event EventHandler<AccountEntryCollectionEventArgs>? WindowClosing;
 
     public event EventHandler? HelpMenuClicked;
-    public event EventHandler? GenMenuClicked;
 
-    public void SetActiveFilePath(string? filePath)
-    {
-        TextBlockActiveFilePath.Text = filePath;
-    }
+    public void SetActiveFilePath(string? filePath) { TextBlockActiveFilePath.Text = filePath; }
 
     public void EnableControls()
     {
         bool isContainerLoaded = _accountEntryCollectionViewModel is not null;
         bool canDataBeSorted =
-            isContainerLoaded &&
-            _accountEntryCollectionViewModel!.AccountEntryViewModels.Count >= 2;
+            isContainerLoaded && _accountEntryCollectionViewModel!.AccountEntryViewModels.Count >= 2;
 
         MenuItemSave.IsEnabled = isContainerLoaded;
         MenuItemClose.IsEnabled = isContainerLoaded;
@@ -71,10 +71,12 @@ public partial class MainWindow : Window
 
         TextBoxSelectedName.IsEnabled = isAccountEntrySelected;
         TextBoxSelectedUrl.IsEnabled = isAccountEntrySelected;
+        TextBoxSelectedDb.IsEnabled = isAccountEntrySelected;
         TextBoxSelectedUser.IsEnabled = isAccountEntrySelected;
         TextBoxSelectedNotes.IsEnabled = isAccountEntrySelected;
         ButtonSelectedEditPassword.IsEnabled = isAccountEntrySelected;
         ButtonSelectedCopyPassword.IsEnabled = canCopyPassword;
+
     }
 
     public void PopulateData(AccountEntryCollection accountEntries)
@@ -110,10 +112,7 @@ public partial class MainWindow : Window
         DataContext = _accountEntryCollectionViewModel;
     }
 
-    public void ResetHasChangedFlag()
-    {
-        _accountEntryCollectionViewModel?.HasChanged = false;
-    }
+    public void ResetHasChangedFlag() { _accountEntryCollectionViewModel?.HasChanged = false; }
 
     public async Task CloseWindow()
     {
@@ -127,12 +126,11 @@ public partial class MainWindow : Window
 
     private AccountEntryCollectionViewModel? _accountEntryCollectionViewModel;
 
-    private void OnSelectedAccountEntryViewModelChanged(
-        object? sender, EventArgs e)
-            => VisualStateChanged?.Invoke(this, EventArgs.Empty);
+    private void OnSelectedAccountEntryViewModelChanged(object? sender, EventArgs e) => VisualStateChanged?.Invoke(
+        this,
+        EventArgs.Empty);
 
-    private void OnPasswordChanged(object? sender, EventArgs e)
-        => EnableControls();
+    private void OnPasswordChanged(object? sender, EventArgs e) => EnableControls();
 
     private void OnMenuItemNewClick(object? sender, RoutedEventArgs e)
     {
@@ -187,13 +185,14 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnMenuItemHelpClick(object? sender, RoutedEventArgs e)
-        => HelpMenuClicked?.Invoke(this, EventArgs.Empty);
+    private void OnMenuItemHelpClick(object? sender, RoutedEventArgs e) => HelpMenuClicked?.Invoke(
+        this,
+        EventArgs.Empty);
 
-
-    private async void OnMenuItemGenClick(object? sender, RoutedEventArgs e)
-        => GenMenuClicked?.Invoke(this, EventArgs.Empty);
-
+    private async void OnMenuItemGeneratePasswordClick(object? sender, RoutedEventArgs e)
+    {
+        await AppViewModel.GeneratePasswordAsync(this, false);
+    }
 
     private AccountEntryCollectionEventArgs GetAccountEntryCollectionEventArgs()
     {
@@ -209,8 +208,7 @@ public partial class MainWindow : Window
         }
 
         var accountEntryCollectionEventArgs =
-            new AccountEntryCollectionEventArgs(
-                accountEntryCollection, hasChanged);
+            new AccountEntryCollectionEventArgs(accountEntryCollection, hasChanged);
 
         return accountEntryCollectionEventArgs;
     }

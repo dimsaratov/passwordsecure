@@ -18,18 +18,15 @@ namespace PasswordSecure.Presentation.Views;
 
 public partial class EditPasswordWindow : Window
 {
+    private const string Mm_Error = "Password Mismatch Error";
+    private const string Mm_ErrorLong = "The password and the confirmed password do not match.";
+    private const string PTS_Error = "Password Too Short Error";
+
     public EditPasswordWindow()
     {
         InitializeComponent();
         _isPasswordAccepted = false;
-        _settings = new();
         AddHandler(KeyDownEvent, OnKeyPressing, RoutingStrategies.Tunnel);
-
-    }
-    public EditPasswordWindow(GenerationSettings g_settings) : this()
-    {
-
-        _settings = g_settings;
     }
 
     public int MinimumPasswordLength { get; set; }
@@ -38,8 +35,6 @@ public partial class EditPasswordWindow : Window
 
     private SecureString? _initialPassword;
 
-    private readonly GenerationSettings _settings;
-
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
         _initialPassword = TextBoxPassword.Password;
@@ -47,11 +42,23 @@ public partial class EditPasswordWindow : Window
         TextBoxPassword.Focus();
     }
 
+    private SecureString? Password
+    {
+        get => TextBoxPassword.Password ?? _initialPassword;
+        set => TextBoxPassword.Password = value;
+    }
+
+    private SecureString? ConfirmPassword
+    {
+        get => TextBoxConfirmPassword.Password ?? _initialPassword;
+        set => TextBoxConfirmPassword.Password = value;
+    }
+
     private void OnClosing(object? sender, WindowClosingEventArgs e)
     {
         if (!_isPasswordAccepted)
         {
-            TextBoxPassword.Password = _initialPassword;
+            Password = _initialPassword;
         }
     }
 
@@ -87,11 +94,11 @@ public partial class EditPasswordWindow : Window
 
     private async void OnButtonGenerateClick(object? sender, RoutedEventArgs e)
     {
-        var passwordGeneratorView = new PasswordGeneratorView();
+        if (await AppViewModel.GeneratePasswordAsync(this, true) is SecureString secure)
         {
-            DataContext = new PasswordGeneratorViewModel(_settings);
+            Password = secure;
+            ConfirmPassword = secure;
         }
-        await passwordGeneratorView.ShowDialog(this);
     }
 
     private async void OnOkButtonClick(object? sender, RoutedEventArgs e)
@@ -103,6 +110,7 @@ public partial class EditPasswordWindow : Window
             Close();
         }
     }
+
 
     private async Task<bool> CanContinue()
     {
@@ -125,61 +133,35 @@ public partial class EditPasswordWindow : Window
 
     private bool IsPasswordTooShort
     {
-        get
-        {
-            bool isPasswordTooShort = false;
+        get => Password?.Length < MinimumPasswordLength;
+    }
 
-            if (TextBoxPassword.Password is not null)
-            {
-                isPasswordTooShort =
-                    TextBoxPassword.Password.Length < MinimumPasswordLength;
-            }
-
-            return isPasswordTooShort;
-        }
+    private bool IsPasswordMismatch
+    {
+        get => Password is not null && !(Password?.Length < AppViewModel.GenSettings?.MinLength)
+        && Password.SecureStringEquals(ConfirmPassword);
     }
 
     private async Task DisplayPasswordTooShortErrorMessage()
     {
         await MessageBoxManager.ShowDialogAsync(
-            "Password Too Short Error",
-            $"The password is too short.{Environment.NewLine}{Environment.NewLine}Minimum password length is {MinimumPasswordLength} characters.",
+            PTS_Error,
+            TS_Error,
             MessageBoxType.Error,
             this);
     }
 
-    private bool IsPasswordMismatch
-    {
-        get
-        {
-            bool isPasswordMismatch = false;
+    private string TS_Error =>
+        $"The password is too short.{Environment.NewLine}{Environment.NewLine}" +
+        $"Minimum password length is {MinimumPasswordLength} characters.";
 
-            if (TextBoxPassword.Password?.Length == 0)
-            {
-                TextBoxPassword.Password = null;
-            }
 
-            if (TextBoxConfirmPassword.Password?.Length == 0)
-            {
-                TextBoxConfirmPassword.Password = null;
-            }
-
-            if (TextBoxPassword.Password is not null ||
-                TextBoxConfirmPassword.Password is not null)
-            {
-                isPasswordMismatch =
-                    TextBoxPassword.Password.SecureStringEquals(TextBoxConfirmPassword.Password);
-            }
-
-            return isPasswordMismatch;
-        }
-    }
 
     private async Task DisplayPasswordMismatchErrorMessage()
     {
         await MessageBoxManager.ShowDialogAsync(
-            "Password Mismatch Error",
-            "The password and the confirmed password do not match.",
+            Mm_Error,
+            Mm_ErrorLong,
             MessageBoxType.Error,
             this);
     }

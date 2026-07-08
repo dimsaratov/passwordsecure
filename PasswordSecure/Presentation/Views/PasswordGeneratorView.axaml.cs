@@ -6,6 +6,8 @@ using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 
+using PasswordGenerator;
+
 using PasswordSecure.Presentation.ViewModels;
 namespace PasswordSecure.Presentation.Views
 {
@@ -21,6 +23,12 @@ namespace PasswordSecure.Presentation.Views
         {
             InitializeComponent();
             _timer.Tick += OnTimer_Tick;
+        }
+
+        public bool IsFunction
+        {
+            get => OkButton.IsVisible;
+            set => OkButton.IsVisible = value;
         }
 
         private async void OnTimer_Tick(object? sender, System.EventArgs e)
@@ -75,14 +83,22 @@ namespace PasswordSecure.Presentation.Views
             ButtonGenerate.Focus();
         }
 
-        private void OnCancelButtonClick(object? sender, RoutedEventArgs e)
+        private void OnCloseButtonClick(object? sender, RoutedEventArgs e)
         {
-            Close();
+            if (DataContext is PasswordGeneratorViewModel viewModel)
+            {
+                viewModel.Password = null;
+            }
+            Close(null);
         }
 
         private void OnOkButtonClick(object? sender, RoutedEventArgs e)
         {
-            Close();
+            if (DataContext is PasswordGeneratorViewModel viewModel)
+            {
+                Close(viewModel.Password?.ToSecureString());
+            }
+            Close(null);
         }
     }
 }

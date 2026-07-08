@@ -174,6 +174,7 @@ public class AccountEntryCollectionViewModel : ObservableObject
                     {
                         DataContext = selectedAccountEntryViewModel
                     };
+
                     editPasswordWindow.TextBoxConfirmPassword.Password =
                         selectedAccountEntryViewModel.Password;
 
@@ -182,6 +183,7 @@ public class AccountEntryCollectionViewModel : ObservableObject
                     PasswordChanged?.Invoke(this, EventArgs.Empty);
                 }
             });
+
 
     private RelayCommand GetCopyPasswordCommand()
         => new(

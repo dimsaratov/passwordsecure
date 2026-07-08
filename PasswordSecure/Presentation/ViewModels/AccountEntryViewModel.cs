@@ -37,6 +37,19 @@ public class AccountEntryViewModel(AccountEntry accountEntry) : ObservableObject
                     => accountEntry.Url = propertyValue);
         }
     }
+    public string DbName
+    {
+        get => AccountEntry.DbName;
+        set
+        {
+            SetProperty(
+                AccountEntry.DbName,
+                value,
+                AccountEntry,
+                (accountEntry, propertyValue)
+                    => accountEntry.DbName = propertyValue);
+        }
+    }
 
     public string User
     {

@@ -4,7 +4,7 @@ using PasswordSecure.Application.Providers;
 using PasswordSecure.Application.Services;
 using PasswordSecure.Infrastructure.Providers;
 using PasswordSecure.Infrastructure.Services;
-using PasswordSecure.Presentation;
+using PasswordSecure.Presentation.ViewModels;
 using PasswordSecure.Presentation.Views;
 
 namespace PasswordSecure;
@@ -49,7 +49,7 @@ public class App : Avalonia.Application
 
         var mainWindow = new MainWindow();
 
-        _ = new MainPresenter(
+        _ = new AppViewModel(
             dataAccessServiceDecorated,
             assemblyVersionProvider,
             encryptedDataFolderProvider,
