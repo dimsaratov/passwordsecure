@@ -6,8 +6,6 @@ using System.Linq;
 using System.Security;
 using System.Windows.Input;
 
-using Avalonia.Input.Platform;
-
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -194,7 +192,7 @@ public class AccountEntryCollectionViewModel : ObservableObject
 
                 if (selectedAccountEntryViewModel?.Password is SecureString secure)
                 {
-                    await _mainWindow.Clipboard!.SetTextAsync(secure.ToPasswordString());
+                    AppViewModel.Copy(secure.ToPasswordString());
                 }
             });
 

@@ -5,7 +5,9 @@ using System.Security;
 using System.Threading.Tasks;
 
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 
 using PasswordGenerator;
 
@@ -21,16 +23,49 @@ namespace PasswordSecure.Presentation.ViewModels;
 
 public class AppViewModel
 {
-    private static AppSettings appSettings;
+    #region Static
 
+    private static AppSettings appSettings;
+    private static readonly DispatcherTimer _timer;
+    private static TopLevel? topLevel;
     internal static GenerationSettings? GenSettings => appSettings?.GenerationSettings;
 
     static AppViewModel()
     {
         EncryptedFileTypes = GetEncryptedFileTypes();
         appSettings = SettingsService.Load();
+        _timer = new()
+        {
+            Interval = TimeSpan.FromSeconds(appSettings.TimeSafePassword),
+        };
+        _timer.Tick += OnTimer_Tick;
     }
 
+    private static async void OnTimer_Tick(object? sender, System.EventArgs e)
+    {
+        _timer.Stop();
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            if (topLevel?.Clipboard is { } clipboard)
+            {
+                await clipboard.ClearAsync();
+            }
+        });
+    }
+
+    public static async void Copy(string? secure)
+    {
+        if (secure == null) return;
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            if (topLevel?.Clipboard is { } clipboard)
+            {
+                await clipboard.SetTextAsync(secure);
+                _timer.Start();
+            }
+        });
+    }
+    #endregion
 
     public AppViewModel(
         IDataAccessService dataAccessService,
@@ -42,6 +77,7 @@ public class AppViewModel
         _assemblyVersionProvider = assemblyVersionProvider;
 
         _mainWindow = mainWindow;
+        topLevel = _mainWindow;
 
         _mainWindow.VisualStateChanged += OnVisualStateChanged;
 

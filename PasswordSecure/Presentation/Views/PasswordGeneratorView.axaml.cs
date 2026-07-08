@@ -2,7 +2,6 @@ using System;
 
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 
@@ -44,19 +43,11 @@ namespace PasswordSecure.Presentation.Views
             });
         }
 
-        private async void OnCopyButtonClick(object? sender, RoutedEventArgs e)
+        private void OnCopyButtonClick(object? sender, RoutedEventArgs e)
         {
             if (DataContext is PasswordGeneratorViewModel viewModel)
             {
-                await Dispatcher.UIThread.InvokeAsync(async () =>
-                {
-                    var topLevel = TopLevel.GetTopLevel(this);
-                    if (topLevel?.Clipboard is { } clipboard)
-                    {
-                        await clipboard.SetTextAsync(viewModel.Password);
-                        _timer.Start();
-                    }
-                });
+                AppViewModel.Copy(viewModel.Password);
             }
         }
 
