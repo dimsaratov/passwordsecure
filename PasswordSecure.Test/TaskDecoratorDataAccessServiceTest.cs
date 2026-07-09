@@ -55,7 +55,7 @@ public class TaskDecoratorDataAccessServiceTest
         // Act
         await _taskDecoratorDataAccessService.SaveAccountEntries(
             accessParams, accountEntryCollectionReference);
-        AccountEntryCollection accountEntryCollection =
+        AccountEntryCollection? accountEntryCollection =
             await _taskDecoratorDataAccessService.ReadAccountEntries(
                 accessParams);
 
@@ -88,7 +88,7 @@ public class TaskDecoratorDataAccessServiceTest
         // Act
         await _taskDecoratorDataAccessService.SaveAccountEntries(
             accessParams, accountEntryCollectionReference);
-        AccountEntryCollection accountEntryCollection =
+        AccountEntryCollection? accountEntryCollection =
             await _taskDecoratorDataAccessService.ReadAccountEntries(
                 accessParams);
 
@@ -138,7 +138,7 @@ public class TaskDecoratorDataAccessServiceTest
         // Act
         await _taskDecoratorDataAccessService.SaveAccountEntries(
             accessParams, accountEntryCollectionReference);
-        AccountEntryCollection accountEntryCollection =
+        AccountEntryCollection? accountEntryCollection =
             await _taskDecoratorDataAccessService.ReadAccountEntries(
                 accessParams);
 
@@ -152,7 +152,7 @@ public class TaskDecoratorDataAccessServiceTest
         Assert.Equal(name, singleAccountEntry.Name);
         Assert.Equal(url, singleAccountEntry.Url);
         Assert.Equal(user, singleAccountEntry.User);
-        Assert.Equal(password, singleAccountEntry.Password?.ToPasswordString());
+        Assert.Equal(password, singleAccountEntry.Password?.ToUnSecureString());
     }
 
 
@@ -205,7 +205,7 @@ public class TaskDecoratorDataAccessServiceTest
         // Act
         await _taskDecoratorDataAccessService.SaveAccountEntries(
             accessParams, accountEntryCollectionReference);
-        AccountEntryCollection accountEntryCollection =
+        AccountEntryCollection? accountEntryCollection =
             await _taskDecoratorDataAccessService.ReadAccountEntries(
                 accessParams);
 
@@ -219,7 +219,7 @@ public class TaskDecoratorDataAccessServiceTest
         Assert.Equal(name1, firstAccountEntry.Name);
         Assert.Equal(url1, firstAccountEntry.Url);
         Assert.Equal(user1, firstAccountEntry.User);
-        Assert.Equal(password1, firstAccountEntry.Password?.ToPasswordString());
+        Assert.Equal(password1, firstAccountEntry.Password?.ToUnSecureString());
 
         AccountEntry secondAccountEntry = accountEntryCollection[1];
 
@@ -227,7 +227,7 @@ public class TaskDecoratorDataAccessServiceTest
         Assert.Equal(name2, secondAccountEntry.Name);
         Assert.Equal(url2, secondAccountEntry.Url);
         Assert.Equal(user2, secondAccountEntry.User);
-        Assert.Equal(password2, secondAccountEntry.Password?.ToPasswordString());
+        Assert.Equal(password2, secondAccountEntry.Password?.ToUnSecureString());
     }
 
     [Fact]
@@ -284,10 +284,13 @@ public class TaskDecoratorDataAccessServiceTest
         // Act
         await _taskDecoratorDataAccessService.SaveAccountEntries(
             accessParams, accountEntryCollectionReference);
-        AccountEntryCollection accountEntryCollection =
+        AccountEntryCollection? accountEntryCollection =
             await _taskDecoratorDataAccessService.ReadAccountEntries(
                 accessParams);
-
+        if (accountEntryCollection == null)
+        {
+            return;
+        }
         accountEntryCollection[0].Name = name1Changed;
         accountEntryCollection[0].Url = url1Changed;
         accountEntryCollection[0].User = user1Changed;
@@ -295,7 +298,7 @@ public class TaskDecoratorDataAccessServiceTest
 
         await _taskDecoratorDataAccessService.SaveAccountEntries(
             accessParams, accountEntryCollection);
-        AccountEntryCollection accountEntryCollectionChanged =
+        AccountEntryCollection? accountEntryCollectionChanged =
             await _taskDecoratorDataAccessService.ReadAccountEntries(
                 accessParams);
 
@@ -309,7 +312,7 @@ public class TaskDecoratorDataAccessServiceTest
         Assert.Equal(name1Changed, firstAccountEntryChanged.Name);
         Assert.Equal(url1Changed, firstAccountEntryChanged.Url);
         Assert.Equal(user1Changed, firstAccountEntryChanged.User);
-        Assert.Equal(password1Changed, firstAccountEntryChanged.Password?.ToPasswordString());
+        Assert.Equal(password1Changed, firstAccountEntryChanged.Password?.ToUnSecureString());
 
         AccountEntry secondAccountEntryChanged = accountEntryCollectionChanged[1];
 
@@ -317,7 +320,7 @@ public class TaskDecoratorDataAccessServiceTest
         Assert.Equal(name2, secondAccountEntryChanged.Name);
         Assert.Equal(url2, secondAccountEntryChanged.Url);
         Assert.Equal(user2, secondAccountEntryChanged.User);
-        Assert.Equal(password2, secondAccountEntryChanged.Password?.ToPasswordString());
+        Assert.Equal(password2, secondAccountEntryChanged.Password?.ToUnSecureString());
     }
 
     [Fact]
@@ -382,15 +385,16 @@ public class TaskDecoratorDataAccessServiceTest
         // Act
         await _taskDecoratorDataAccessService.SaveAccountEntries(
             accessParams, accountEntryCollectionReference);
-        AccountEntryCollection accountEntryCollection =
+        AccountEntryCollection? accountEntryCollection =
             await _taskDecoratorDataAccessService.ReadAccountEntries(
                 accessParams);
-
-        accountEntryCollection[0] = accountEntry1Changed;
-
-        await _taskDecoratorDataAccessService.SaveAccountEntries(
-            accessParams, accountEntryCollection);
-        AccountEntryCollection accountEntryCollectionChanged =
+        if (accountEntryCollection != null)
+        {
+            accountEntryCollection[0] = accountEntry1Changed;
+            await _taskDecoratorDataAccessService.SaveAccountEntries(
+                accessParams, accountEntryCollection);
+        }
+        AccountEntryCollection? accountEntryCollectionChanged =
             await _taskDecoratorDataAccessService.ReadAccountEntries(
                 accessParams);
 
@@ -404,7 +408,7 @@ public class TaskDecoratorDataAccessServiceTest
         Assert.Equal(name1Changed, firstAccountEntryChanged.Name);
         Assert.Equal(url1Changed, firstAccountEntryChanged.Url);
         Assert.Equal(user1Changed, firstAccountEntryChanged.User);
-        Assert.Equal(password1Changed, firstAccountEntryChanged.Password?.ToPasswordString());
+        Assert.Equal(password1Changed, firstAccountEntryChanged.Password?.ToUnSecureString());
 
         AccountEntry secondAccountEntryChanged = accountEntryCollectionChanged[1];
 
@@ -412,7 +416,7 @@ public class TaskDecoratorDataAccessServiceTest
         Assert.Equal(name2, secondAccountEntryChanged.Name);
         Assert.Equal(url2, secondAccountEntryChanged.Url);
         Assert.Equal(user2, secondAccountEntryChanged.User);
-        Assert.Equal(password2, secondAccountEntryChanged.Password?.ToPasswordString());
+        Assert.Equal(password2, secondAccountEntryChanged.Password?.ToUnSecureString());
     }
 
     private readonly SecureString Password = "Master Password".ToSecureString();

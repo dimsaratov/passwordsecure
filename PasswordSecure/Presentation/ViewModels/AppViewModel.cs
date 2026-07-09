@@ -28,7 +28,17 @@ public class AppViewModel
     private static AppSettings appSettings;
     private static readonly DispatcherTimer _timer;
     private static TopLevel? topLevel;
+    private const int minimumPasswordLength = 8;
+
     internal static GenerationSettings? GenSettings => appSettings?.GenerationSettings;
+
+    internal static int MinimumPasswordLength
+    {
+        get
+        {
+            return GenSettings is null ? minimumPasswordLength : GenSettings.MinLength;
+        }
+    }
 
     static AppViewModel()
     {
@@ -65,6 +75,7 @@ public class AppViewModel
             }
         });
     }
+
     #endregion
 
     public AppViewModel(
@@ -143,12 +154,10 @@ public class AppViewModel
     private static readonly IReadOnlyList<FilePickerFileType>
         EncryptedFileTypes;
 
-    private const int MinimumMasterPasswordLength = 8;
-
     private readonly IDataAccessService _dataAccessService;
     private readonly IAssemblyVersionProvider _assemblyVersionProvider;
 
-    private readonly MainWindow _mainWindow;
+    internal readonly MainWindow _mainWindow;
     private readonly AccessParams _accessParams;
 
     private readonly string _encryptedDataFolderPath;
@@ -311,10 +320,7 @@ public class AppViewModel
             return;
         }
 
-        var createMasterPasswordWindow = new CreateMasterPasswordWindow()
-        {
-            MinimumPasswordLength = MinimumMasterPasswordLength
-        };
+        var createMasterPasswordWindow = new CreateMasterPasswordWindow();
         var createMasterPasswordViewModel = new CreateMasterPasswordViewModel(
             _accessParams);
 
@@ -339,7 +345,6 @@ public class AppViewModel
 
         _mainWindow.PopulateData(accountEntryCollection);
     }
-
 
     private async Task Encrypted()
     {
@@ -388,11 +393,10 @@ public class AppViewModel
         _mainWindow.SetActiveFilePath(_accessParams.FilePath);
         appSettings?.LastFile = _accessParams.FilePath;
 
-
-        AccountEntryCollection accountEntryCollection =
-            await _dataAccessService.ReadAccountEntries(_accessParams);
-
-        _mainWindow.PopulateData(accountEntryCollection);
+        if (await _dataAccessService.ReadAccountEntries(_accessParams) is AccountEntryCollection accountEntryCollection)
+        {
+            _mainWindow.PopulateData(accountEntryCollection);
+        }
     }
 
     private async Task SaveEncryptedContainer(

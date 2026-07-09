@@ -17,7 +17,7 @@ public class DataAccessService(
     IDataEncryptionService dataEncryptionService,
     IBackupService backupService) : IDataAccessService
 {
-    public async Task<AccountEntryCollection> ReadAccountEntries(
+    public async Task<AccountEntryCollection?> ReadAccountEntries(
         AccessParams accessParams)
     {
         try

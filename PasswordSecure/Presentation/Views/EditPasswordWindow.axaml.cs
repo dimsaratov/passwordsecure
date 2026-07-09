@@ -1,13 +1,17 @@
 using System;
+using System.Diagnostics;
 using System.Security;
+using System.Text;
 using System.Threading.Tasks;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
 using PasswordGenerator;
 
+using PasswordSecure.Presentation.Controls;
 using PasswordSecure.Presentation.Controls.MessageBoxControl;
 using PasswordSecure.Presentation.ViewModels;
 
@@ -21,44 +25,50 @@ public partial class EditPasswordWindow : Window
     private const string Mm_Error = "Password Mismatch Error";
     private const string Mm_ErrorLong = "The password and the confirmed password do not match.";
     private const string PTS_Error = "Password Too Short Error";
+    private bool _isPasswordAccepted;
+
+    private SecureString? _initialPassword;
+
+    public static readonly StyledProperty<string?> IsMessageMismatchProperty =
+                    AvaloniaProperty.Register<EditPasswordWindow, string?>(nameof(IsMessageMismatch));
 
     public EditPasswordWindow()
     {
         InitializeComponent();
         _isPasswordAccepted = false;
         AddHandler(KeyDownEvent, OnKeyPressing, RoutingStrategies.Tunnel);
+        TextBoxPassword.PropertyChanged += OnPasswordPropertyChanged;
+        TextBoxConfirmPassword.PropertyChanged += OnPasswordPropertyChanged;
     }
 
-    public int MinimumPasswordLength { get; set; }
+    private void OnPasswordPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (sender is RevealPasswordBox && e.Property.Name == "Password")
+        {
+            ValidatePassword();
+        }
+    }
 
-    private bool _isPasswordAccepted;
-
-    private SecureString? _initialPassword;
 
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
-        _initialPassword = TextBoxPassword.Password;
-
+        _initialPassword = TextBoxPassword.Password?.Copy();
+        TextBoxConfirmPassword.Password = TextBoxPassword.Password?.Copy();
         TextBoxPassword.Focus();
+        IsMessageMismatch = "Без ошибок";
     }
 
-    private SecureString? Password
+    public string? IsMessageMismatch
     {
-        get => TextBoxPassword.Password ?? _initialPassword;
-        set => TextBoxPassword.Password = value;
-    }
-
-    private SecureString? ConfirmPassword
-    {
-        get => TextBoxConfirmPassword.Password ?? _initialPassword;
-        set => TextBoxConfirmPassword.Password = value;
+        get => GetValue(IsMessageMismatchProperty);
+        set => SetValue(IsMessageMismatchProperty, value);
     }
 
     private void OnClosing(object? sender, WindowClosingEventArgs e)
     {
         if (!_isPasswordAccepted)
         {
-            Password = _initialPassword;
+            TextBoxPassword.Password = _initialPassword;
         }
     }
 
@@ -96,8 +106,8 @@ public partial class EditPasswordWindow : Window
     {
         if (await AppViewModel.GeneratePasswordAsync(this, true) is SecureString secure)
         {
-            Password = secure;
-            ConfirmPassword = secure;
+            TextBoxPassword.Password = secure;
+            TextBoxConfirmPassword.Password = secure.Copy();
         }
     }
 
@@ -131,15 +141,49 @@ public partial class EditPasswordWindow : Window
         return true;
     }
 
+    private void ValidatePassword()
+    {
+        var sb = new StringBuilder();
+        PasswordValidationResult? result = null;
+        if (AppViewModel.GenSettings is not null)
+        {
+            SecureString? pass = TextBoxPassword.Password;
+            SecureString? c_pass = TextBoxConfirmPassword.Password;
+            SecureString? oldPass = _initialPassword;
+
+            Debug.WriteLine($"Current pass: {pass?.ToUnSecureString()}");
+            Debug.WriteLine($"Confirm pass: {c_pass?.ToUnSecureString()}");
+            Debug.WriteLine($"Initial pass: {oldPass?.ToUnSecureString()}");
+
+            result = PasswordValidator.ValidatePassword(pass,
+                                                        AppViewModel.GenSettings,
+                                                        oldPass);
+        }
+
+        if (result?.IsValid == false)
+        {
+            foreach (string err in result.Errors)
+            {
+                sb.AppendLine(err);
+            }
+        }
+
+        if (IsPasswordMismatch)
+        {
+            sb.AppendLine("The passwords do not match each other.");
+        }
+        IsMessageMismatch = sb.ToString();
+    }
+
+
     private bool IsPasswordTooShort
     {
-        get => Password?.Length < MinimumPasswordLength;
+        get => TextBoxPassword.Password?.Length < AppViewModel.MinimumPasswordLength;
     }
 
     private bool IsPasswordMismatch
     {
-        get => Password is not null && !(Password?.Length < AppViewModel.GenSettings?.MinLength)
-        && Password.SecureStringEquals(ConfirmPassword);
+        get => !TextBoxPassword.Password.SecureStringEquals(TextBoxConfirmPassword.Password);
     }
 
     private async Task DisplayPasswordTooShortErrorMessage()
@@ -151,9 +195,9 @@ public partial class EditPasswordWindow : Window
             this);
     }
 
-    private string TS_Error =>
-        $"The password is too short.{Environment.NewLine}{Environment.NewLine}" +
-        $"Minimum password length is {MinimumPasswordLength} characters.";
+    private static string TS_Error =>
+        $"The password is too short.{Environment.NewLine}" +
+        $"Minimum password length is {AppViewModel.MinimumPasswordLength} characters.";
 
 
 

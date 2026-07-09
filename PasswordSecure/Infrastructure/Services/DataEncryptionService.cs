@@ -102,7 +102,7 @@ public class DataEncryptionService : IDataEncryptionService
     private static byte[] GetPasswordBytes(SecureString password, byte[] salt)
     {
         byte[] passwordBytes = Rfc2898DeriveBytes.Pbkdf2(
-            password.ToPasswordString(),
+            password.ToUnSecureString(),
             salt,
             PasswordIterations,
             HashAlgorithmName.SHA256,

@@ -173,9 +173,6 @@ public class AccountEntryCollectionViewModel : ObservableObject
                         DataContext = selectedAccountEntryViewModel
                     };
 
-                    editPasswordWindow.TextBoxConfirmPassword.Password =
-                        selectedAccountEntryViewModel.Password;
-
                     await editPasswordWindow.ShowDialog(_mainWindow);
 
                     PasswordChanged?.Invoke(this, EventArgs.Empty);
@@ -192,7 +189,7 @@ public class AccountEntryCollectionViewModel : ObservableObject
 
                 if (selectedAccountEntryViewModel?.Password is SecureString secure)
                 {
-                    AppViewModel.Copy(secure.ToPasswordString());
+                    AppViewModel.Copy(secure.ToUnSecureString());
                 }
             });
 
