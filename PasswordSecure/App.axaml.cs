@@ -11,12 +11,9 @@ namespace PasswordSecure;
 
 public class App : Avalonia.Application
 {
-    public override void Initialize()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
+    public override void Initialize() { AvaloniaXamlLoader.Load(this); }
 
-    public override void OnFrameworkInitializationCompleted()
+    public override async void OnFrameworkInitializationCompleted()
     {
         IDataSerializationService jsonDataSerializationService =
             new JsonDataSerializationService();
@@ -49,12 +46,15 @@ public class App : Avalonia.Application
 
         var mainWindow = new MainWindow();
 
-        _ = new AppViewModel(
+        AppViewModel model = new(
             dataAccessServiceDecorated,
             assemblyVersionProvider,
             encryptedDataFolderProvider,
             mainWindow);
 
-        mainWindow.Show();
+        if (await model.ReadSettings())
+        {
+            mainWindow.Show();
+        }
     }
 }

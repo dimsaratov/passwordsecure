@@ -52,10 +52,9 @@ public partial class EditPasswordWindow : Window
 
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
-        _initialPassword = TextBoxPassword.Password?.Copy();
         TextBoxConfirmPassword.Password = TextBoxPassword.Password?.Copy();
         TextBoxPassword.Focus();
-        IsMessageMismatch = "Без ошибок";
+        _initialPassword = TextBoxPassword.Password?.Copy();
     }
 
     public string? IsMessageMismatch
@@ -131,7 +130,7 @@ public partial class EditPasswordWindow : Window
             return false;
         }
 
-        if (!IsPasswordMismatch)
+        if (IsPasswordMismatch)
         {
             await DisplayPasswordMismatchErrorMessage();
 

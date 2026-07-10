@@ -118,7 +118,6 @@ public partial class MainWindow : Window
     {
         _shouldAllowWindowClose = true;
         await Clipboard!.ClearAsync();
-
         Close();
     }
 

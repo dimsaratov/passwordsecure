@@ -21,11 +21,6 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
         this.settings = settings.Clone() ?? throw new ArgumentNullException(nameof(settings));
         this.settings.ErrorsChanged += OnSettingsErrorsChanged;
         this.settings.PropertyChanged += OnSettingsPropertyChanged;
-
-        if (settings.IsCorrect)
-        {
-            Password = Generator.Generate(this.settings);
-        }
     }
 
     private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -49,6 +44,9 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
                 break;
             case nameof(settings.UseSymbols):
                 OnPropertyChanged(nameof(UseSymbols));
+                break;
+            case nameof(settings.ForbiddenRepeatedChars):
+                OnPropertyChanged(nameof(ForbiddenRepeatedChars));
                 break;
             case nameof(settings.Symbols):
                 OnPropertyChanged(nameof(Symbols));
@@ -91,11 +89,12 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
             {
                 field = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(CurrentLength));
             }
         }
     }
 
-    internal GenerationSettings GetGenerationSettings() => settings;
+    internal GenerationSettings GetSettings() => settings;
 
     public bool UseUppercase { get => settings.UseUppercase; set => settings.UseUppercase = value; }
 
@@ -107,11 +106,15 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
 
     public int MinLength { get => settings.MinLength; set => settings.MinLength = value; }
 
-    public int MaxLength { get => settings.MaxLength; set => settings.MaxLength = value; }
+    public double MaxLength { get => settings.MaxLength; set => settings.MaxLength = (int)value; }
 
     public string Symbols { get => settings.Symbols; set => settings.Symbols = value; }
 
+    public int ForbiddenRepeatedChars { get => settings.ForbiddenRepeatedChars; set => settings.ForbiddenRepeatedChars = value; }
+
     public char[] SpecialChars { get => settings.SpecialChars; set => settings.SpecialChars = value; }
+
+    public string CurrentLength => $"Password current length: {Password?.Length ?? 0}";
 
     private string _messageSpecialChars = string.Empty;
 
@@ -131,7 +134,7 @@ public partial class PasswordGeneratorViewModel : ObservableObject, IDisposable
     public System.Security.SecureString? GetPassword() => Password?.ToSecureString();
 
     [RelayCommand]
-    private void Generate()
+    internal void Generate()
     {
         if (settings.IsCorrect)
         {

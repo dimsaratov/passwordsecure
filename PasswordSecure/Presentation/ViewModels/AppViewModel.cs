@@ -24,58 +24,61 @@ namespace PasswordSecure.Presentation.ViewModels;
 public class AppViewModel
 {
     #region Static
-
-    private static AppSettings appSettings;
     private static readonly DispatcherTimer _timer;
     private static TopLevel? topLevel;
-    private const int minimumPasswordLength = 8;
 
-    internal static GenerationSettings? GenSettings => appSettings?.GenerationSettings;
+    internal static GenerationSettings GenSettings => Settings.GenerationSettings;
 
     internal static int MinimumPasswordLength
     {
-        get
+        get { return GenSettings.MinLength; }
+    }
+
+    internal static AppSettings Settings
+    {
+        get => field ?? new AppSettings();
+        set
         {
-            return GenSettings is null ? minimumPasswordLength : GenSettings.MinLength;
+            ArgumentNullException.ThrowIfNull(value);
+            field = value;
         }
     }
 
     static AppViewModel()
     {
         EncryptedFileTypes = GetEncryptedFileTypes();
-        appSettings = SettingsService.Load();
-        _timer = new()
-        {
-            Interval = TimeSpan.FromSeconds(appSettings.TimeSafePassword),
-        };
-        _timer.Tick += OnTimer_Tick;
+        _timer = new();
     }
 
     private static async void OnTimer_Tick(object? sender, System.EventArgs e)
     {
         _timer.Stop();
-        await Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            if (topLevel?.Clipboard is { } clipboard)
-            {
-                await clipboard.ClearAsync();
-            }
-        });
+        await Dispatcher.UIThread
+            .InvokeAsync(
+                async () =>
+                {
+                    if (topLevel?.Clipboard is { } clipboard)
+                    {
+                        await clipboard.ClearAsync();
+                    }
+                });
     }
 
     public static async void Copy(string? secure)
     {
-        if (secure == null) return;
-        await Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            if (topLevel?.Clipboard is { } clipboard)
-            {
-                await clipboard.SetTextAsync(secure);
-                _timer.Start();
-            }
-        });
+        if (secure == null)
+            return;
+        await Dispatcher.UIThread
+            .InvokeAsync(
+                async () =>
+                {
+                    if (topLevel?.Clipboard is { } clipboard)
+                    {
+                        await clipboard.SetTextAsync(secure);
+                        _timer.Start();
+                    }
+                });
     }
-
     #endregion
 
     public AppViewModel(
@@ -108,9 +111,28 @@ public class AppViewModel
             encryptedDataFolderProvider.GetEncryptedDataFolderPath();
     }
 
-    private void OnWindow_Opened(object? sender, EventArgs e)
+    private void OnWindow_Opened(object? sender, EventArgs e) { RestoreState(); }
+
+    internal async Task<bool> ReadSettings()
     {
-        RestoreState();
+        try
+        {
+            Settings = SettingsService.Load();
+            _mainWindow.Width = Settings.WindowWidth;
+            _mainWindow.Height = Settings.WindowHeight;
+            _timer.Interval = TimeSpan.FromSeconds(Settings.TimeSafePassword);
+            _timer.Tick += OnTimer_Tick;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await MessageBoxManager.ShowDialogAsync(
+                "Read settings error",
+                ex.Message,
+                MessageBoxType.Error,
+                _mainWindow);
+        }
+        return false;
     }
 
     internal static async Task<SecureString?> GeneratePasswordAsync(Window owner, bool isFunction)
@@ -120,18 +142,19 @@ public class AppViewModel
             return null;
         }
         PasswordGeneratorViewModel model = new(GenSettings);
-        var passwordGeneratorView = new PasswordGeneratorView()
+        var passwordGeneratorView = new PasswordGeneratorView() { IsFunction = isFunction, DataContext = model };
+
+        if (isFunction)
         {
-            IsFunction = isFunction,
-            DataContext = model
-        };
+            model.Generate();
+        }
 
         SecureString? securePassword = await passwordGeneratorView.ShowDialog<SecureString?>(owner);
 
         if (securePassword is not null)
         {
-            appSettings.GenerationSettings = model.GetGenerationSettings();
-            SettingsService.Save(appSettings);
+            Settings.GenerationSettings = model.GetSettings();
+            SettingsService.Save(Settings);
         }
 
         return securePassword;
@@ -139,16 +162,12 @@ public class AppViewModel
 
     private async void RestoreState()
     {
-        appSettings ??= new();
-
-        if (System.IO.File.Exists(appSettings.LastFile))
+        if (System.IO.File.Exists(Settings.LastFile))
         {
-            await LoadEncryptedContainer(appSettings.LastFile);
+            await LoadEncryptedContainer(Settings.LastFile);
         }
-        if (appSettings.WindowWidth > 0)
-        {
-            _mainWindow.Width = appSettings.WindowWidth;
-        }
+        _mainWindow.Width = Settings.WindowWidth;
+        _mainWindow.Height = Settings.WindowHeight;
     }
 
     private static readonly IReadOnlyList<FilePickerFileType>
@@ -162,11 +181,9 @@ public class AppViewModel
 
     private readonly string _encryptedDataFolderPath;
 
-    private void OnVisualStateChanged(object? sender, EventArgs e)
-        => _mainWindow.EnableControls();
+    private void OnVisualStateChanged(object? sender, EventArgs e) => _mainWindow.EnableControls();
 
-    private async void OnNewMenuClicked(
-        object? sender, AccountEntryCollectionEventArgs e)
+    private async void OnNewMenuClicked(object? sender, AccountEntryCollectionEventArgs e)
     {
         bool shouldExitWithoutProcessing =
             await SuggestSaveChanges(e, MessageBoxType.WarningYesNoCancel);
@@ -194,11 +211,9 @@ public class AppViewModel
         }
     }
 
-    private async void OnOpenMenuClicked(
-        object? sender, AccountEntryCollectionEventArgs e)
+    private async void OnOpenMenuClicked(object? sender, AccountEntryCollectionEventArgs e)
     {
-        bool shouldExitWithoutProcessing = await SuggestSaveChanges(
-            e, MessageBoxType.WarningYesNoCancel);
+        bool shouldExitWithoutProcessing = await SuggestSaveChanges(e, MessageBoxType.WarningYesNoCancel);
 
         if (shouldExitWithoutProcessing)
         {
@@ -223,8 +238,7 @@ public class AppViewModel
         }
     }
 
-    private async void OnSaveMenuClicked(
-        object? sender, AccountEntryCollectionEventArgs e)
+    private async void OnSaveMenuClicked(object? sender, AccountEntryCollectionEventArgs e)
     {
         try
         {
@@ -236,8 +250,7 @@ public class AppViewModel
         }
     }
 
-    private async void OnCloseMenuClicked(
-        object? sender, AccountEntryCollectionEventArgs e)
+    private async void OnCloseMenuClicked(object? sender, AccountEntryCollectionEventArgs e)
     {
         bool shouldExitWithoutProcessing =
             await SuggestSaveChanges(e, MessageBoxType.WarningYesNoCancel);
@@ -252,11 +265,9 @@ public class AppViewModel
         _mainWindow.EnableControls();
     }
 
-    private async void OnExitMenuClicked(
-        object? sender, AccountEntryCollectionEventArgs e)
+    private async void OnExitMenuClicked(object? sender, AccountEntryCollectionEventArgs e)
     {
-        bool shouldExitWithoutProcessing = await SuggestSaveChanges(
-            e, MessageBoxType.WarningYesNoCancel);
+        bool shouldExitWithoutProcessing = await SuggestSaveChanges(e, MessageBoxType.WarningYesNoCancel);
 
         if (shouldExitWithoutProcessing)
         {
@@ -266,25 +277,21 @@ public class AppViewModel
         await _mainWindow.CloseWindow();
     }
 
-    private async void OnWindowClosing(
-        object? sender, AccountEntryCollectionEventArgs e)
+    private async void OnWindowClosing(object? sender, AccountEntryCollectionEventArgs e)
     {
         await SuggestSaveChanges(e, MessageBoxType.WarningYesNo);
         await _mainWindow.CloseWindow();
     }
 
-    private async void OnHelpMenuClicked(object? sender, EventArgs e)
-        => await DisplayHelpMessage();
+    private async void OnHelpMenuClicked(object? sender, EventArgs e) => await DisplayHelpMessage();
 
-    private async Task<bool> SuggestSaveChanges(
-        AccountEntryCollectionEventArgs e, MessageBoxType messageBoxType)
+    private async Task<bool> SuggestSaveChanges(AccountEntryCollectionEventArgs e, MessageBoxType messageBoxType)
     {
         bool shouldExitWithoutProcessing = false;
 
         if (e.HasChanged)
         {
-            MessageBoxResult buttonResult = await DisplayUnsavedChangesMessage(
-                messageBoxType);
+            MessageBoxResult buttonResult = await DisplayUnsavedChangesMessage(messageBoxType);
 
             if (buttonResult == MessageBoxResult.Yes)
             {
@@ -312,17 +319,15 @@ public class AppViewModel
         };
 
         IStorageFile? encryptedFile =
-            await _mainWindow.StorageProvider.SaveFilePickerAsync(
-                encryptedFileCreateOptions);
+            await _mainWindow.StorageProvider.SaveFilePickerAsync(encryptedFileCreateOptions);
 
-        if (encryptedFile is null || appSettings is null)
+        if (encryptedFile is null || Settings is null)
         {
             return;
         }
 
         var createMasterPasswordWindow = new CreateMasterPasswordWindow();
-        var createMasterPasswordViewModel = new CreateMasterPasswordViewModel(
-            _accessParams);
+        var createMasterPasswordViewModel = new CreateMasterPasswordViewModel(_accessParams);
 
         createMasterPasswordWindow.DataContext = createMasterPasswordViewModel;
         await createMasterPasswordWindow.ShowDialog(_mainWindow);
@@ -334,14 +339,13 @@ public class AppViewModel
 
         _accessParams.FilePath = encryptedFile.Path.LocalPath;
         _mainWindow.SetActiveFilePath(_accessParams.FilePath);
-        appSettings?.LastFile = _accessParams.FilePath;
+        Settings?.LastFile = _accessParams.FilePath;
 
 
         _accessParams.IsNewContainer = true;
 
         var accountEntryCollection = new AccountEntryCollection();
-        await _dataAccessService.SaveAccountEntries(
-            _accessParams, accountEntryCollection);
+        await _dataAccessService.SaveAccountEntries(_accessParams, accountEntryCollection);
 
         _mainWindow.PopulateData(accountEntryCollection);
     }
@@ -358,8 +362,7 @@ public class AppViewModel
         };
 
         IReadOnlyList<IStorageFile> selectedEncryptedFiles =
-            await _mainWindow.StorageProvider.OpenFilePickerAsync(
-                encryptedFileOpenOptions);
+            await _mainWindow.StorageProvider.OpenFilePickerAsync(encryptedFileOpenOptions);
 
         IStorageFile? encryptedFile = selectedEncryptedFiles.SingleOrDefault();
 
@@ -391,39 +394,43 @@ public class AppViewModel
 
         _accessParams.FilePath = localPath;
         _mainWindow.SetActiveFilePath(_accessParams.FilePath);
-        appSettings?.LastFile = _accessParams.FilePath;
-
-        if (await _dataAccessService.ReadAccountEntries(_accessParams) is AccountEntryCollection accountEntryCollection)
+        Settings?.LastFile = _accessParams.FilePath;
+        try
         {
-            _mainWindow.PopulateData(accountEntryCollection);
+            if (await _dataAccessService.ReadAccountEntries(_accessParams) is AccountEntryCollection accountEntryCollection)
+            {
+                _mainWindow.PopulateData(accountEntryCollection);
+            }
+        }
+        catch (Exception ex)
+        {
+            await MessageBoxManager.ShowDialogAsync("Decription error", ex.Message, MessageBoxType.Error, _mainWindow);
         }
     }
 
-    private async Task SaveEncryptedContainer(
-        AccountEntryCollection? accountEntryCollection)
+    private async Task SaveEncryptedContainer(AccountEntryCollection? accountEntryCollection)
     {
         if (_accessParams.FilePath is not null &&
             _accessParams.Password is not null &&
             accountEntryCollection is not null)
         {
-            await _dataAccessService.SaveAccountEntries(
-                _accessParams, accountEntryCollection);
-
-            appSettings?.WindowWidth = _mainWindow.Width;
-            SettingsService.Save(appSettings);
-
+            try
+            {
+                await _dataAccessService.SaveAccountEntries(_accessParams, accountEntryCollection);
+                Settings?.WindowWidth = _mainWindow.Width;
+                Settings?.WindowHeight = _mainWindow.Height;
+                SettingsService.Save(Settings);
+            }
+            catch (Exception ex)
+            {
+                await MessageBoxManager.ShowDialogAsync("Save error", ex.Message, MessageBoxType.Error, _mainWindow);
+            }
             _mainWindow.ResetHasChangedFlag();
         }
     }
 
     private async Task DisplayErrorMessage(Exception ex)
-    {
-        await MessageBoxManager.ShowDialogAsync(
-            "Error",
-            ex.Message,
-            MessageBoxType.Error,
-            _mainWindow);
-    }
+    { await MessageBoxManager.ShowDialogAsync("Error", ex.Message, MessageBoxType.Error, _mainWindow); }
 
     private async Task DisplayHelpMessage()
     {
@@ -434,15 +441,14 @@ public class AppViewModel
             _mainWindow);
     }
 
-    private async Task<MessageBoxResult> DisplayUnsavedChangesMessage(
-        MessageBoxType messageBoxType)
+    private async Task<MessageBoxResult> DisplayUnsavedChangesMessage(MessageBoxType messageBoxType)
     {
         MessageBoxResult unsavedChangesMessageBoxResult =
             await MessageBoxManager.ShowDialogAsync(
-                "Unsaved Changes",
-                "There are unsaved changes. Would you like to save them?",
-                messageBoxType,
-                _mainWindow);
+            "Unsaved Changes",
+            "There are unsaved changes. Would you like to save them?",
+            messageBoxType,
+            _mainWindow);
 
         return unsavedChangesMessageBoxResult;
     }
@@ -453,25 +459,18 @@ public class AppViewModel
         _accessParams.FilePath = null;
 
         _mainWindow.ClearData();
-        appSettings?.LastFile = string.Empty;
+        Settings?.LastFile = string.Empty;
     }
 
-    private async Task<IStorageFolder?> GetEncryptedDataFolder()
-        => await _mainWindow.StorageProvider.TryGetFolderFromPathAsync(
-            _encryptedDataFolderPath);
+    private async Task<IStorageFolder?> GetEncryptedDataFolder() => await _mainWindow.StorageProvider
+        .TryGetFolderFromPathAsync(_encryptedDataFolderPath);
 
     private static List<FilePickerFileType> GetEncryptedFileTypes()
     {
-        List<FilePickerFileType> encryptedFileTypes =
-        [
-            new("Encrypted files (*.encrypted)")
-            {
-                Patterns =
-                [
-                    "*.encrypted"
-                ]
-            }
-        ];
+        List<FilePickerFileType> encryptedFileTypes = [ new("Encrypted files (*.encrypted)")
+        {
+            Patterns = [ "*.encrypted" ]
+        } ];
         return encryptedFileTypes;
     }
 }

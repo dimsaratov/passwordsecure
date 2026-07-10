@@ -38,7 +38,20 @@ namespace PasswordSecure.Application
                     OnPropertyChanged(nameof(WindowWidth));
                 }
             }
-        } = 600;
+        } = 680;
+
+        public double WindowHeight
+        {
+            get;
+            set
+            {
+                if (field != value)
+                {
+                    field = value;
+                    OnPropertyChanged(nameof(WindowHeight));
+                }
+            }
+        } = 330;
 
         public GenerationSettings GenerationSettings
         {
