@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,6 +31,10 @@ public partial class EditPasswordWindow : Window
     public static readonly StyledProperty<string?> IsMessageMismatchProperty =
                     AvaloniaProperty.Register<EditPasswordWindow, string?>(nameof(IsMessageMismatch));
 
+    public static readonly StyledProperty<int> PasswordCompAssessProperty =
+                    AvaloniaProperty.Register<EditPasswordWindow, int>(nameof(PasswordComplexityAssessment));
+
+
     public EditPasswordWindow()
     {
         InitializeComponent();
@@ -61,6 +64,13 @@ public partial class EditPasswordWindow : Window
     {
         get => GetValue(IsMessageMismatchProperty);
         set => SetValue(IsMessageMismatchProperty, value);
+    }
+
+
+    public int PasswordComplexityAssessment
+    {
+        get => GetValue(PasswordCompAssessProperty);
+        set => SetValue(PasswordCompAssessProperty, value);
     }
 
     private void OnClosing(object? sender, WindowClosingEventArgs e)
@@ -147,14 +157,8 @@ public partial class EditPasswordWindow : Window
         if (AppViewModel.GenSettings is not null)
         {
             SecureString? pass = TextBoxPassword.Password;
-            SecureString? c_pass = TextBoxConfirmPassword.Password;
             SecureString? oldPass = _initialPassword;
-
-            Debug.WriteLine($"Current pass: {pass?.ToUnSecureString()}");
-            Debug.WriteLine($"Confirm pass: {c_pass?.ToUnSecureString()}");
-            Debug.WriteLine($"Initial pass: {oldPass?.ToUnSecureString()}");
-
-            result = PasswordValidator.ValidatePassword(pass,
+            result = PasswordValidator.ValidatePasswordWithScore(pass,
                                                         AppViewModel.GenSettings,
                                                         oldPass);
         }
@@ -169,9 +173,11 @@ public partial class EditPasswordWindow : Window
 
         if (IsPasswordMismatch)
         {
-            sb.AppendLine("The passwords do not match each other.");
+            sb.AppendLine(Mm_ErrorLong);
         }
+
         IsMessageMismatch = sb.ToString();
+        PasswordComplexityAssessment = (result?.Score) ?? 0;
     }
 
 
@@ -187,11 +193,10 @@ public partial class EditPasswordWindow : Window
 
     private async Task DisplayPasswordTooShortErrorMessage()
     {
-        await MessageBoxManager.ShowDialogAsync(
-            PTS_Error,
-            TS_Error,
-            MessageBoxType.Error,
-            this);
+        await MessageBoxManager.ShowDialogAsync(PTS_Error,
+                                                TS_Error,
+                                                MessageBoxType.Error,
+                                                this);
     }
 
     private static string TS_Error =>

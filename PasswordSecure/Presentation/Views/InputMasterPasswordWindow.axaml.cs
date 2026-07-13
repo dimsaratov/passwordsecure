@@ -17,8 +17,7 @@ public partial class InputMasterPasswordWindow : Window
 
     private bool _isPasswordAccepted;
 
-    private void OnLoaded(object? sender, RoutedEventArgs e)
-        => TextBoxPassword.Focus();
+    private void OnLoaded(object? sender, RoutedEventArgs e) => TextBoxPassword.Focus();
 
     private void OnClosing(object? sender, WindowClosingEventArgs e)
     {
@@ -58,7 +57,6 @@ public partial class InputMasterPasswordWindow : Window
     private void OnOkButtonClick(object? sender, RoutedEventArgs e)
     {
         _isPasswordAccepted = true;
-
         Close();
     }
 }
